@@ -168,8 +168,10 @@ def sp_logout():
 
 def graph_get(path):
     token = session.get('sp_access_token','')
-    req = urllib.request.Request(
-        'https://graph.microsoft.com/v1.0' + path,
+    # Replace any control characters in the URL
+    url = 'https://graph.microsoft.com/v1.0' + path
+    url = url.encode('ascii', 'ignore').decode('ascii')
+    req = urllib.request.Request(url,
         headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'})
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read())
@@ -187,9 +189,9 @@ def sp_sites():
 @app.route('/api/sp-drives')
 def sp_drives():
     if not authed() or not session.get('sp_access_token'): return jsonify({'error':'not_authenticated'}),401
-    site_id = request.args.get('site_id')
+    site_id = (request.args.get('site_id') or '').strip()
     try:
-        data = graph_get(f'/sites/{site_id}/drives')
+        data = graph_get(f'/sites/{urllib.parse.quote(site_id, safe=",")}/drives')
         drives = [{'id':d['id'],'name':d.get('name','')} for d in data.get('value',[])]
         return jsonify({'drives': drives})
     except Exception as e: return jsonify({'error':str(e)}),500
@@ -197,10 +199,15 @@ def sp_drives():
 @app.route('/api/sp-folders')
 def sp_folders():
     if not authed() or not session.get('sp_access_token'): return jsonify({'error':'not_authenticated'}),401
-    drive_id  = request.args.get('drive_id')
+    drive_id  = request.args.get('drive_id','')
     folder_id = request.args.get('folder_id','root')
+    # Clean IDs — remove any control characters or whitespace
+    drive_id  = drive_id.strip()
+    folder_id = folder_id.strip()
     try:
-        data = graph_get(f'/drives/{drive_id}/items/{folder_id}/children?$filter=folder ne null&$select=id,name,folder')
+        # Use simpler query without $filter to avoid encoding issues
+        path = f'/drives/{urllib.parse.quote(drive_id, safe="")}/items/{urllib.parse.quote(folder_id, safe="")}/children?$select=id,name,folder,file'
+        data = graph_get(path)
         folders = [{'id':i['id'],'name':i['name']} for i in data.get('value',[]) if 'folder' in i]
         return jsonify({'folders':folders,'parent_id':folder_id})
     except Exception as e: return jsonify({'error':str(e)}),500
