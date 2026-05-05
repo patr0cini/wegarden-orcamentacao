@@ -154,7 +154,63 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .btn-reset-auto:hover{color:var(--green)}
 .search-box.manual-mode{border-color:var(--green3);background:var(--white)}
 
-/* ── SCROLLBAR ── *//* ── SCROLLBAR ── */
+/* ── PREVIEW MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
+.modal-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:1100px;
+  max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-title{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.modal-sheet-tabs{display:flex;gap:4px;overflow-x:auto;padding:.5rem 1.25rem;
+  background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--white);
+  font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap;transition:all .15s}
+.modal-tab:hover{background:var(--green-xl);border-color:var(--green-l)}
+.modal-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.modal-body{flex:1;overflow:auto;padding:1rem 1.25rem}
+.preview-table{border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%}
+.preview-table th{background:var(--bg2);color:var(--ink3);font-weight:600;font-size:11px;
+  padding:5px 10px;border:1px solid var(--border);position:sticky;top:0;z-index:5;text-align:left}
+.preview-table td{padding:4px 10px;border:1px solid #ebebeb;color:var(--ink);vertical-align:middle;
+  max-width:320px;overflow:hidden;text-overflow:ellipsis}
+.preview-table td.num{text-align:right;font-family:'DM Mono',monospace;font-size:11px}
+.preview-table tr:nth-child(even) td{background:#fafafa}
+.preview-table tr.has-price td{background:var(--green-xl)}
+.preview-table td.price-cell{color:var(--green);font-weight:600;font-family:'DM Mono',monospace}
+.btn-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;
+  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
+.btn-close:hover{background:var(--bg2)}
+
+/* ── SCROLLBAR ── *//* ── PREVIEW MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
+.modal-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:1100px;
+  max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;
+  padding:.875rem 1.25rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-title{font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.modal-sheet-tabs{display:flex;gap:4px;overflow-x:auto;padding:.5rem 1.25rem;
+  background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--white);
+  font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;white-space:nowrap;transition:all .15s}
+.modal-tab:hover{background:var(--green-xl);border-color:var(--green-l)}
+.modal-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.modal-body{flex:1;overflow:auto;padding:1rem 1.25rem}
+.preview-table{border-collapse:collapse;font-size:12px;white-space:nowrap;min-width:100%}
+.preview-table th{background:var(--bg2);color:var(--ink3);font-weight:600;font-size:11px;
+  padding:5px 10px;border:1px solid var(--border);position:sticky;top:0;z-index:5;text-align:left}
+.preview-table td{padding:4px 10px;border:1px solid #ebebeb;color:var(--ink);vertical-align:middle;
+  max-width:320px;overflow:hidden;text-overflow:ellipsis}
+.preview-table td.num{text-align:right;font-family:'DM Mono',monospace;font-size:11px}
+.preview-table tr:nth-child(even) td{background:#fafafa}
+.preview-table tr.has-price td{background:var(--green-xl)}
+.preview-table td.price-cell{color:var(--green);font-weight:600;font-family:'DM Mono',monospace}
+.btn-close{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;
+  cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
+.btn-close:hover{background:var(--bg2)}
+
+/* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -180,7 +236,10 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
         <div class="left-title" id="mapaTitle">Mapa de quantidades</div>
         <div class="left-meta" id="mapaMeta">—</div>
       </div>
-      <button class="btn btn-sm btn-green" onclick="exportForClaude()">⬇ Exportar Excel</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="openPreview()" id="btnPreview" style="display:none">👁 Pré-visualizar</button>
+        <button class="btn btn-sm btn-green" onclick="exportForClaude()">⬇ Exportar Excel</button>
+      </div>
     </div>
     <div class="art-row-header">
       <div class="art-cell">Descrição</div>
@@ -238,6 +297,20 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
         <div class="search-hint" id="searchHint"></div>
       </div>
       <div class="results" id="results"></div>
+    </div>
+  </div>
+
+  <!-- PREVIEW MODAL -->
+  <div class="modal-overlay" id="previewModal" style="display:none" onclick="if(event.target===this)closePreview()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">👁 <span id="previewModalTitle">Pré-visualização</span></div>
+        <button class="btn-close" onclick="closePreview()">✕</button>
+      </div>
+      <div class="modal-sheet-tabs" id="previewTabs"></div>
+      <div class="modal-body">
+        <div id="previewTableWrap"></div>
+      </div>
     </div>
   </div>
 
@@ -477,6 +550,7 @@ function loadMapa(e) {
       uc.onclick = null;
       document.getElementById('ucMapaOk').style.display='block';
       document.getElementById('ucMapaOk').textContent = `✓ ${file.name} — ${ITEMS.length} artigos`;
+      if(document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display='block';
       checkReady();
     } catch(err) {
       alert('Erro ao ler mapa: '+err.message);
@@ -729,6 +803,92 @@ function flashFeedback() {
   setTimeout(() => { row.style.background = ''; row.classList.add('selected'); }, 400);
 }
 
+// ─── PREVIEW ─────────────────────────────────────────────────────
+function openPreview() {
+  if (!ORIGINAL_WB) return;
+  document.getElementById('previewModalTitle').textContent = ORIGINAL_FNAME;
+  document.getElementById('previewModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Build sheet tabs
+  const tabs = document.getElementById('previewTabs');
+  tabs.innerHTML = '';
+  ORIGINAL_WB.SheetNames.forEach((name, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'modal-tab' + (i === 0 ? ' active' : '');
+    btn.textContent = name;
+    btn.onclick = () => {
+      tabs.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      renderPreviewSheet(name);
+    };
+    tabs.appendChild(btn);
+  });
+
+  renderPreviewSheet(ORIGINAL_WB.SheetNames[0]);
+}
+
+function closePreview() {
+  document.getElementById('previewModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderPreviewSheet(sheetName) {
+  const ws = ORIGINAL_WB.Sheets[sheetName];
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  const maxRow = Math.min(range.e.r, 199);  // cap at 200 rows for performance
+  const maxCol = Math.min(range.e.c, 19);   // cap at 20 cols
+
+  // Build price lookup for this sheet: rowIndex → price
+  const priceLookup = {};
+  ITEMS.filter(it => it.sheet === sheetName && it.price).forEach(it => {
+    priceLookup[it.rowIndex] = { price: it.price, priceCol: it.priceCol, totalCol: it.totalCol };
+  });
+
+  // Column headers (A, B, C...)
+  let html = '<table class="preview-table"><thead><tr><th>#</th>';
+  for (let c = range.s.c; c <= maxCol; c++) {
+    html += `<th>${XLSX.utils.encode_col(c)}</th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  for (let r = range.s.r; r <= maxRow; r++) {
+    const hasPriceRow = priceLookup[r];
+    html += `<tr${hasPriceRow ? ' class="has-price"' : ''}>`;
+    html += `<td style="color:var(--ink3);font-size:10px;background:var(--bg2);text-align:right">${r+1}</td>`;
+    for (let c = range.s.c; c <= maxCol; c++) {
+      const addr = XLSX.utils.encode_cell({r, c});
+      const cell = ws[addr];
+      let val = cell ? (cell.w || cell.v) : '';  // prefer formatted value
+      if (val === null || val === undefined) val = '';
+
+      // Highlight price/total cells that have been filled
+      let cls = '';
+      if (hasPriceRow && (c === hasPriceRow.priceCol || c === hasPriceRow.totalCol)) {
+        val = c === hasPriceRow.priceCol
+          ? hasPriceRow.price.toFixed(2) + ' €'
+          : (hasPriceRow.price && ITEMS.find(it=>it.rowIndex===r&&it.sheet===sheetName)?.qty
+              ? (ITEMS.find(it=>it.rowIndex===r&&it.sheet===sheetName).qty * hasPriceRow.price).toFixed(2) + ' €'
+              : val);
+        cls = ' class="price-cell"';
+      } else if (typeof cell?.v === 'number') {
+        cls = ' class="num"';
+      }
+
+      const display = String(val).substring(0, 80) + (String(val).length > 80 ? '…' : '');
+      html += `<td${cls} title="${String(val).replace(/"/g,'&quot;')}">${display}</td>`;
+    }
+    html += '</tr>';
+  }
+
+  if (maxRow < range.e.r) {
+    html += `<tr><td colspan="${maxCol - range.s.c + 2}" style="text-align:center;color:var(--ink3);padding:8px;font-size:11px">... mais ${range.e.r - maxRow} linhas (não mostradas)</td></tr>`;
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('previewTableWrap').innerHTML = html;
+}
+
 // ─── EXPORT ──────────────────────────────────────────────────────
 async function exportForClaude() {
   if (!ORIGINAL_WB) { alert('Nenhum ficheiro carregado.'); return; }
@@ -790,6 +950,7 @@ async function exportForClaude() {
     btn.disabled = false;
   }
 }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closePreview(); });
 </script>
 </body>
 </html>
