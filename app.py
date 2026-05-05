@@ -2,18 +2,21 @@ import base64, io, os
 from flask import Flask, request, send_file, session, redirect, send_from_directory
 import openpyxl
 
+BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR   = os.path.join(BASE_DIR, 'static')
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'wegarden-secret-2026')
-APP_PASSWORD   = os.environ.get('APP_PASSWORD', 'wegarden2026')
-STATIC_DIR     = os.path.join(os.path.dirname(__file__), 'static')
+APP_PASSWORD  = os.environ.get('APP_PASSWORD', 'wegarden2026')
 
-def authed(): return session.get('auth') is True
+def authed():
+    return session.get('auth') is True
 
 def login_page(error=''):
     err_html = f'<div class="err">{error}</div>' if error else ''
     return f'''<!DOCTYPE html>
 <html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>We Garden &middot; Acesso</title>
+<title>We Garden</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap');
 *{{box-sizing:border-box;margin:0;padding:0}}
@@ -57,6 +60,9 @@ def logout():
 def index():
     if not authed():
         return redirect('/login')
+    index_path = os.path.join(STATIC_DIR, 'index.html')
+    if not os.path.exists(index_path):
+        return f'index.html not found at {index_path}. Static dir: {os.listdir(BASE_DIR)}', 500
     return send_from_directory(STATIC_DIR, 'index.html')
 
 @app.route('/api/fill-excel', methods=['POST'])
@@ -85,6 +91,19 @@ def fill_excel():
             download_name=filename.rsplit('.', 1)[0] + '_preenchido.xlsx')
     except Exception as e:
         return str(e), 500
+
+
+@app.route('/debug')
+def debug():
+    import json
+    info = {
+        'BASE_DIR': BASE_DIR,
+        'STATIC_DIR': STATIC_DIR,
+        'base_files': os.listdir(BASE_DIR),
+        'static_exists': os.path.exists(STATIC_DIR),
+        'static_files': os.listdir(STATIC_DIR) if os.path.exists(STATIC_DIR) else []
+    }
+    return json.dumps(info, indent=2), 200, {'Content-Type': 'application/json'}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
