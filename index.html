@@ -1199,41 +1199,62 @@ function showSPStep(n) {
 
 function connectSharePoint() {
   const w = 600, he = 700;
-  const left = (screen.width  - w) / 2;
+  const left = (screen.width - w) / 2;
   const top  = (screen.height - he) / 2;
-  const popup = window.open(
-    '/auth/sharepoint',
-    'sp_login',
-    `width=${w},height=${he},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
-  );
+  const popup = window.open('/auth/sharepoint', 'sp_login',
+    `width=${w},height=${he},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`);
   if (!popup) {
     alert('O browser bloqueou o popup. Autoriza popups para este site e tenta de novo.');
     return;
   }
-  // Show loading state while waiting
-  document.getElementById('spStep1').innerHTML =
-    '<div style="text-align:center;padding:1rem;color:var(--ink3);font-size:13px">' +
-    '⏳ A aguardar login Microsoft...<br><small>Completa o login na janela que abriu</small></div>';
 
-  // Poll until popup closes, then re-check session
-  const timer = setInterval(async () => {
+  document.getElementById('spStep1').innerHTML =
+    '<div style="text-align:center;padding:1.5rem;color:var(--ink3);font-size:13px">' +
+    '<div style="font-size:1.5rem;margin-bottom:.5rem">⏳</div>' +
+    'A aguardar login Microsoft...<br>' +
+    '<small style="color:var(--ink3)">Completa o login na janela que abriu</small></div>';
+
+  // Listen for postMessage from the popup with the short token
+  function onMessage(evt) {
+    if (evt.data && evt.data.type === 'SP_AUTH_OK') {
+      window.removeEventListener('message', onMessage);
+      // Exchange short token → server stores access token in session
+      fetch('/auth/sp-token', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({token: evt.data.token})
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d.ok) { showSPStep(2); loadSPSites(); }
+        else { restoreSPLoginBtn('Erro: ' + d.error); }
+      })
+      .catch(e => restoreSPLoginBtn('Erro de ligação.'));
+    }
+  }
+  window.addEventListener('message', onMessage);
+
+  // Fallback: if popup closes without postMessage (user cancelled)
+  const timer = setInterval(() => {
     if (popup.closed) {
       clearInterval(timer);
-      // Small delay to let the server session settle
-      await new Promise(r => setTimeout(r, 500));
-      const resp = await fetch('/auth/sp-status');
-      const data = await resp.json();
-      if (data.connected) {
-        showSPStep(2);
-        loadSPSites();
-      } else {
-        // Login failed or cancelled — restore button
-        document.getElementById('spStep1').innerHTML =
-          '<div class="sp-note" style="margin-bottom:1rem">ℹ️ Liga a tua conta Microsoft para fazer upload directamente para o SharePoint. Só precisas de autorizar uma vez.</div>' +
-          '<button class="btn-sp-primary" onclick="connectSharePoint()"><span style="font-size:16px;margin-right:6px">🔐</span> Ligar conta Microsoft</button>';
-      }
+      setTimeout(() => {
+        window.removeEventListener('message', onMessage);
+        // Check if we somehow got a session anyway
+        fetch('/auth/sp-status').then(r=>r.json()).then(d => {
+          if (d.connected) { showSPStep(2); loadSPSites(); }
+          else { restoreSPLoginBtn(''); }
+        });
+      }, 800);
     }
-  }, 600);
+  }, 500);
+}
+
+function restoreSPLoginBtn(errMsg) {
+  document.getElementById('spStep1').innerHTML =
+    (errMsg ? `<div class="sp-note" style="color:var(--red);margin-bottom:.75rem">✗ ${errMsg}</div>` : '') +
+    '<div class="sp-note" style="margin-bottom:1rem">ℹ️ Liga a tua conta Microsoft para fazer upload directamente para o SharePoint. Só precisas de autorizar uma vez.</div>' +
+    '<button class="btn-sp-primary" onclick="connectSharePoint()"><span style="font-size:16px;margin-right:6px">🔐</span> Ligar conta Microsoft</button>';
 }
 
 async function disconnectSP() {
