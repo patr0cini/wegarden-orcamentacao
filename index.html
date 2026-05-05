@@ -298,6 +298,40 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .esp-results{flex:1;overflow-y:auto;padding:.5rem 0}
 .esp-empty{padding:2rem 1rem;text-align:center;color:var(--ink3);font-size:12px}
 
+/* ── HISTORY PANEL ── */
+.history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;
+  display:flex;align-items:flex-start;justify-content:flex-end;backdrop-filter:blur(2px)}
+.history-panel{background:var(--white);width:420px;max-width:95vw;height:100vh;
+  display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.15);
+  animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.hp-header{padding:1rem 1.25rem;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hp-title{font-size:15px;font-weight:600}
+.hp-body{flex:1;overflow-y:auto;padding:.5rem 0}
+.hp-empty{padding:3rem 1.5rem;text-align:center;color:var(--ink3);font-size:13px}
+.hp-item{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.hp-item:hover{background:var(--green-xl)}
+.hp-item-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.hp-item-meta{font-size:11px;color:var(--ink3);display:flex;gap:10px;align-items:center}
+.hp-item-user{background:var(--green-l);color:var(--green);padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600}
+.hp-item-actions{display:flex;gap:6px;margin-top:6px}
+.hp-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;
+  font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--ink2)}
+.hp-btn:hover{background:var(--bg)}
+.hp-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.hp-btn.primary:hover{background:var(--green2)}
+.hp-btn.danger:hover{background:#fde8e8;color:var(--red);border-color:var(--red)}
+.hp-footer{padding:.875rem 1.25rem;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.autosave-bar{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.autosave-dot{width:7px;height:7px;border-radius:50%;background:var(--ink3);flex-shrink:0}
+.autosave-dot.saved{background:var(--green3)}
+.autosave-dot.saving{background:var(--amber);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Username prompt */
+.username-badge{font-size:11px;color:var(--green-l);cursor:pointer;opacity:.7}
+.username-badge:hover{opacity:1}
+
 /* ── SCROLLBAR ── *//* ── PREVIEW MODAL ── */
 .sp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
@@ -411,6 +445,40 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .esp-results{flex:1;overflow-y:auto;padding:.5rem 0}
 .esp-empty{padding:2rem 1rem;text-align:center;color:var(--ink3);font-size:12px}
 
+/* ── HISTORY PANEL ── */
+.history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;
+  display:flex;align-items:flex-start;justify-content:flex-end;backdrop-filter:blur(2px)}
+.history-panel{background:var(--white);width:420px;max-width:95vw;height:100vh;
+  display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.15);
+  animation:slideIn .2s ease}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.hp-header{padding:1rem 1.25rem;background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hp-title{font-size:15px;font-weight:600}
+.hp-body{flex:1;overflow-y:auto;padding:.5rem 0}
+.hp-empty{padding:3rem 1.5rem;text-align:center;color:var(--ink3);font-size:13px}
+.hp-item{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.hp-item:hover{background:var(--green-xl)}
+.hp-item-name{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.hp-item-meta{font-size:11px;color:var(--ink3);display:flex;gap:10px;align-items:center}
+.hp-item-user{background:var(--green-l);color:var(--green);padding:1px 7px;border-radius:8px;font-size:10px;font-weight:600}
+.hp-item-actions{display:flex;gap:6px;margin-top:6px}
+.hp-btn{padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;
+  font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;color:var(--ink2)}
+.hp-btn:hover{background:var(--bg)}
+.hp-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.hp-btn.primary:hover{background:var(--green2)}
+.hp-btn.danger:hover{background:#fde8e8;color:var(--red);border-color:var(--red)}
+.hp-footer{padding:.875rem 1.25rem;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg)}
+.autosave-bar{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+.autosave-dot{width:7px;height:7px;border-radius:50%;background:var(--ink3);flex-shrink:0}
+.autosave-dot.saved{background:var(--green3)}
+.autosave-dot.saving{background:var(--amber);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Username prompt */
+.username-badge{font-size:11px;color:var(--green-l);cursor:pointer;opacity:.7}
+.username-badge:hover{opacity:1}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -432,6 +500,12 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
        onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.75">
       www.wegarden.pt
     </a>
+    <span class="username-badge" id="usernameBadge" onclick="promptUsername()" title="Clica para definir o teu nome">👤 <span id="usernameLabel">—</span></span>
+    <div class="autosave-bar" id="autosaveBar" style="display:none">
+      <div class="autosave-dot" id="autosaveDot"></div>
+      <span id="autosaveLabel">—</span>
+    </div>
+    <button onclick="openHistory()" style="padding:5px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--green-l);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'">📋 Orçamentos</button>
     <span style="font-size:11px;color:var(--green-l);cursor:pointer;opacity:.5;letter-spacing:.3px"
           onclick="document.getElementById('fiTabela').click()"
           title="Actualizar tabela de preços">⟳ tabela</span>
@@ -2139,7 +2213,234 @@ async function exportEditorExcel() {
   }
 }
 
+
+// ══ HISTÓRICO E AUTOSAVE ═════════════════════════════════════════
+
+// ── Username ──────────────────────────────────────────────────────
+let CURRENT_USER = localStorage.getItem('wg_username') || '';
+function updateUserBadge() {
+  document.getElementById('usernameLabel').textContent = CURRENT_USER || '—';
+}
+function promptUsername() {
+  const name = prompt('O teu nome (para identificar quem guardou):', CURRENT_USER);
+  if (name !== null) {
+    CURRENT_USER = name.trim();
+    localStorage.setItem('wg_username', CURRENT_USER);
+    updateUserBadge();
+  }
+}
+updateUserBadge();
+
+// ── localStorage autosave ─────────────────────────────────────────
+let autosaveTimer = null;
+let currentOcId = null;  // server-side ID of current orcamento
+
+function scheduleAutosave() {
+  // Save to localStorage immediately (fast, local)
+  const state = {
+    obra: document.getElementById('editorObraName')?.value || '',
+    rows: ORCAMENTO,
+    savedAt: new Date().toISOString(),
+    serverId: currentOcId
+  };
+  localStorage.setItem('wg_current_draft', JSON.stringify(state));
+  setAutosaveStatus('saving');
+
+  // Debounce server save by 3 seconds
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(saveToServer, 3000);
+}
+
+function setAutosaveStatus(status, msg) {
+  const bar  = document.getElementById('autosaveBar');
+  const dot  = document.getElementById('autosaveDot');
+  const lbl  = document.getElementById('autosaveLabel');
+  if (!bar) return;
+  bar.style.display = 'flex';
+  dot.className = 'autosave-dot ' + (status === 'saved' ? 'saved' : status === 'saving' ? 'saving' : '');
+  lbl.textContent = msg || (status === 'saved' ? 'Guardado' : status === 'saving' ? 'A guardar...' : '');
+}
+
+async function saveToServer() {
+  const obra = document.getElementById('editorObraName')?.value || 'Sem nome';
+  if (!ORCAMENTO.length) return;
+  try {
+    const resp = await fetch('/api/orcamentos', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        id: currentOcId,
+        nome: obra,
+        rows: ORCAMENTO,
+        utilizador: CURRENT_USER
+      })
+    });
+    const data = await resp.json();
+    if (data.ok) {
+      currentOcId = data.id;
+      // Update localStorage with server ID
+      const draft = JSON.parse(localStorage.getItem('wg_current_draft') || '{}');
+      draft.serverId = currentOcId;
+      localStorage.setItem('wg_current_draft', JSON.stringify(draft));
+      const now = new Date().toLocaleTimeString('pt-PT', {hour:'2-digit',minute:'2-digit'});
+      setAutosaveStatus('saved', `Guardado às ${now}`);
+    }
+  } catch(e) {
+    setAutosaveStatus('', 'Erro ao guardar');
+  }
+}
+
+async function saveCurrentToServer() {
+  await saveToServer();
+  closeHistory();
+  openHistory();
+}
+
+// ── Recover draft on page load ────────────────────────────────────
+function recoverDraft() {
+  const draft = localStorage.getItem('wg_current_draft');
+  if (!draft) return;
+  try {
+    const state = JSON.parse(draft);
+    if (!state.rows || !state.rows.length) return;
+    const ago = state.savedAt ? new Date(state.savedAt) : null;
+    const agoStr = ago ? ago.toLocaleString('pt-PT', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    const confirm = window.confirm(
+      `Tens um rascunho não guardado:\n"${state.obra || 'Sem nome'}" (${agoStr})\n\nQueres recuperá-lo?`
+    );
+    if (confirm) {
+      ORCAMENTO = state.rows;
+      currentOcId = state.serverId || null;
+      edNextId = Math.max(...state.rows.map(r => r.id || 0)) + 1;
+      // Open editor
+      abrirEditorOrcamento();
+      document.getElementById('editorObraName').value = state.obra || '';
+      renderBudget();
+    }
+  } catch(e) { localStorage.removeItem('wg_current_draft'); }
+}
+
+// ── History panel ─────────────────────────────────────────────────
+async function openHistory() {
+  document.getElementById('historyOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  await loadHistory();
+}
+
+function closeHistory() {
+  document.getElementById('historyOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function loadHistory() {
+  const body = document.getElementById('historyBody');
+  body.innerHTML = '<div class="hp-empty">A carregar...</div>';
+  try {
+    const resp = await fetch('/api/orcamentos');
+    const data = await resp.json();
+    if (!data.orcamentos || !data.orcamentos.length) {
+      body.innerHTML = '<div class="hp-empty">📭 Ainda não há orçamentos guardados.<br><br>Cria um novo orçamento e guarda-o aqui.</div>';
+      return;
+    }
+    body.innerHTML = data.orcamentos.map(o => {
+      const dt = new Date(o.atualizado).toLocaleString('pt-PT', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const isActive = o.id === currentOcId;
+      return `<div class="hp-item${isActive?' selected':''}">
+        <div class="hp-item-name">${o.nome}</div>
+        <div class="hp-item-meta">
+          <span>🕐 ${dt}</span>
+          <span>${o.n_artigos} artigos</span>
+          ${o.utilizador ? `<span class="hp-item-user">${o.utilizador}</span>` : ''}
+          ${isActive ? '<span style="color:var(--green);font-weight:600">● activo</span>' : ''}
+        </div>
+        <div class="hp-item-actions">
+          <button class="hp-btn primary" onclick="loadOrcamento(${o.id})">Abrir</button>
+          <button class="hp-btn" onclick="duplicateOrcamento(${o.id})">Duplicar</button>
+          <button class="hp-btn danger" onclick="deleteOrcamento(${o.id}, '${o.nome.replace(/'/g,"\'")}')">Eliminar</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    body.innerHTML = '<div class="hp-empty">Erro ao carregar. Verifica a ligação.</div>';
+  }
+}
+
+async function loadOrcamento(id) {
+  try {
+    const resp = await fetch('/api/orcamentos/' + id);
+    const data = await resp.json();
+    ORCAMENTO = data.rows;
+    currentOcId = data.id;
+    edNextId = Math.max(...data.rows.map(r => r.id || 0), 0) + 1;
+    closeHistory();
+    // Show editor
+    document.getElementById('uploadScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('editorPage').classList.add('active');
+    if (!PRICE_DB.length) { PRICE_DB = EMBEDDED_PRICE_DB; buildIDF(); }
+    document.getElementById('editorObraName').value = data.nome;
+    renderBudget();
+    setAutosaveStatus('saved', 'Carregado');
+    // Update localStorage
+    localStorage.setItem('wg_current_draft', JSON.stringify({
+      obra: data.nome, rows: ORCAMENTO, serverId: id, savedAt: new Date().toISOString()
+    }));
+  } catch(e) { alert('Erro ao carregar orçamento.'); }
+}
+
+async function duplicateOrcamento(id) {
+  const resp = await fetch('/api/orcamentos/' + id);
+  const data = await resp.json();
+  const resp2 = await fetch('/api/orcamentos', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({nome: data.nome + ' (cópia)', rows: data.rows, utilizador: CURRENT_USER})
+  });
+  await loadHistory();
+}
+
+async function deleteOrcamento(id, nome) {
+  if (!confirm(`Eliminar "${nome}"? Esta acção não pode ser desfeita.`)) return;
+  await fetch('/api/orcamentos/' + id, {method: 'DELETE'});
+  if (currentOcId === id) { currentOcId = null; localStorage.removeItem('wg_current_draft'); }
+  await loadHistory();
+}
+
+// ── Hook into editor changes ──────────────────────────────────────
+// Patch updateRow and applyManualPrice to trigger autosave
+const _origUpdateRow = updateRow;
+function updateRow(id, field, val) {
+  _origUpdateRow(id, field, val);
+  scheduleAutosave();
+}
+
+// Also autosave when obra name changes
+document.addEventListener('DOMContentLoaded', () => {
+  const obraInput = document.getElementById('editorObraName');
+  if (obraInput) obraInput.addEventListener('input', scheduleAutosave);
+  // Try to recover draft after a short delay
+  setTimeout(recoverDraft, 800);
+});
+
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); } });
+
+
+  <!-- HISTORY PANEL -->
+  <div class="history-overlay" id="historyOverlay" style="display:none" onclick="if(event.target===this)closeHistory()">
+    <div class="history-panel">
+      <div class="hp-header">
+        <div class="hp-title">📋 Orçamentos guardados</div>
+        <button onclick="closeHistory()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px">✕</button>
+      </div>
+      <div class="hp-body" id="historyBody">
+        <div class="hp-empty">A carregar...</div>
+      </div>
+      <div class="hp-footer">
+        <button class="btn btn-green" style="width:100%" onclick="saveCurrentToServer()">💾 Guardar orçamento actual</button>
+      </div>
+    </div>
+  </div>
+
 </script>
 </body>
 </html>

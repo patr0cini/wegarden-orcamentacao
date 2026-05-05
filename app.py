@@ -2,6 +2,8 @@ import base64, io, os, json, secrets
 from flask import Flask, request, send_file, session, redirect, send_from_directory, jsonify
 import openpyxl
 import urllib.request, urllib.parse
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, 'static') if os.path.exists(os.path.join(BASE_DIR, 'static', 'index.html')) else BASE_DIR
@@ -9,6 +11,25 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static') if os.path.exists(os.path.join(BAS
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'wegarden-secret-2026')
 APP_PASSWORD        = os.environ.get('APP_PASSWORD', 'wegarden2026')
+
+# Database — uses SQLite locally, PostgreSQL on Render (set DATABASE_URL env var)
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///orcamentos.db')
+if db_url.startswith('postgres://'):  # Render uses postgres://, SQLAlchemy needs postgresql://
+    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+class Orcamento(db.Model):
+    id          = db.Column(db.Integer, primary_key=True)
+    nome        = db.Column(db.String(200), nullable=False)
+    criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    dados       = db.Column(db.Text, nullable=False)  # JSON with rows
+    utilizador  = db.Column(db.String(100), default='')
+
+with app.app_context():
+    db.create_all()
 AZURE_CLIENT_ID     = os.environ.get('AZURE_CLIENT_ID', '')
 AZURE_CLIENT_SECRET = os.environ.get('AZURE_CLIENT_SECRET', '')
 AZURE_TENANT_ID     = os.environ.get('AZURE_TENANT_ID', '')
@@ -275,6 +296,61 @@ def fill_excel():
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,download_name=filename.rsplit('.',1)[0]+'_preenchido.xlsx')
     except Exception as e: return str(e),500
+
+# ── ORÇAMENTOS DB ────────────────────────────────────────────────
+@app.route('/api/orcamentos', methods=['GET'])
+def list_orcamentos():
+    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
+    ocs = Orcamento.query.order_by(Orcamento.atualizado.desc()).all()
+    return jsonify({'orcamentos': [{
+        'id': o.id, 'nome': o.nome,
+        'criado_em': o.criado_em.isoformat(),
+        'atualizado': o.atualizado.isoformat(),
+        'utilizador': o.utilizador,
+        'n_artigos': len([r for r in json.loads(o.dados) if r.get('type') == 'artigo'])
+    } for o in ocs]})
+
+@app.route('/api/orcamentos', methods=['POST'])
+def save_orcamento():
+    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
+    data = request.get_json(force=True)
+    oc_id = data.get('id')
+    if oc_id:
+        oc = db.session.get(Orcamento, oc_id)
+        if oc:
+            oc.nome = data.get('nome', oc.nome)
+            oc.dados = json.dumps(data.get('rows', []), ensure_ascii=False)
+            oc.atualizado = datetime.utcnow()
+            oc.utilizador = data.get('utilizador', '')
+            db.session.commit()
+            return jsonify({'id': oc.id, 'ok': True})
+    oc = Orcamento(
+        nome=data.get('nome', 'Sem nome'),
+        dados=json.dumps(data.get('rows', []), ensure_ascii=False),
+        utilizador=data.get('utilizador', '')
+    )
+    db.session.add(oc)
+    db.session.commit()
+    return jsonify({'id': oc.id, 'ok': True})
+
+@app.route('/api/orcamentos/<int:oc_id>', methods=['GET'])
+def get_orcamento(oc_id):
+    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
+    oc = db.session.get(Orcamento, oc_id)
+    if not oc: return jsonify({'error': 'not found'}), 404
+    return jsonify({'id': oc.id, 'nome': oc.nome,
+                    'rows': json.loads(oc.dados),
+                    'atualizado': oc.atualizado.isoformat(),
+                    'utilizador': oc.utilizador})
+
+@app.route('/api/orcamentos/<int:oc_id>', methods=['DELETE'])
+def delete_orcamento(oc_id):
+    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
+    oc = db.session.get(Orcamento, oc_id)
+    if not oc: return jsonify({'error': 'not found'}), 404
+    db.session.delete(oc)
+    db.session.commit()
+    return jsonify({'ok': True})
 
 @app.route('/debug')
 def debug():
