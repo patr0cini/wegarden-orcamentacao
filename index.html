@@ -58,6 +58,13 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .art-row.composite-child{border-left:3px solid var(--amber);background:#fffcf5}
 .art-row.composite-child:hover{background:#fff8e8}
 .art-row.composite-child.selected{background:#fef3d0;border-left:3px solid var(--amber)}
+/* When composite mode is active, all rows become clickable with amber hover */
+#articleList.composite-active .art-row:not(.selected){cursor:pointer}
+#articleList.composite-active .art-row:hover{background:#fff8e8 !important;border-left:3px solid var(--amber)}
+#articleList.composite-active .art-row.art-row-parent{opacity:1}
+#articleList.composite-active::before{content:'🧩 Modo composto activo — clica nos sub-artigos';
+  display:block;font-size:11px;color:var(--amber);background:#fffbf0;
+  padding:6px 12px;border-bottom:1px solid #f0d898;position:sticky;top:0;z-index:20;font-weight:500}
 .art-row.selected .art-ref,.art-row.selected .art-desc{color:var(--green)}
 .art-cell{padding:7px 10px;font-size:12px;color:var(--ink2);display:flex;align-items:center}
 .art-cell.ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);min-width:0}
@@ -478,6 +485,8 @@ function toggleComposite() {
     const parent = ITEMS.find(i=>i.id===SELECTED_ID);
     const lbl = document.getElementById('compositeParentLabel');
     if (lbl && parent) lbl.textContent = parent.desc.substring(0,50);
+    // Add visual hint to list that composite selection is active
+    document.getElementById('articleList').classList.add('composite-active');
     renderCompositePanel();
   }
 }
@@ -492,13 +501,17 @@ function renderCompositePanel() {
   childIds.forEach(childId => {
     const child = ITEMS.find(i => i.id === childId);
     if (!child) return;
-    rows += `<div class="subart-row" id="subart_${childId}">
-      <div class="subart-desc" style="flex:1;font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
-           title="${child.desc}">${child.desc.substring(0,50)}</div>
-      <input class="subart-price" type="number" step="0.01" placeholder="0.00"
-             value="${child.price||''}" oninput="updateChildPrice(${childId},this.value)">
-      <span class="subart-unit" style="font-size:10px">€/${child.unit||'—'}</span>
-      <button class="subart-remove" onclick="removeChildFromComposite(${childId})" title="Remover">×</button>
+    const unitLabel = child.unit || 'vg';
+    rows += `<div class="subart-row" id="subart_${childId}" style="flex-wrap:wrap;gap:4px;align-items:flex-start">
+      <div style="flex:1;min-width:0;font-size:11px;color:var(--ink);line-height:1.3;padding-top:2px"
+           title="${child.desc}">${child.desc.substring(0,60)}${child.desc.length>60?'…':''}</div>
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        <input class="subart-price" type="number" step="0.01" placeholder="0.00"
+               value="${child.price||''}" oninput="updateChildPrice(${childId},this.value)"
+               style="width:80px">
+        <span class="subart-unit" style="font-size:10px;color:var(--ink3)">€/${unitLabel}</span>
+        <button class="subart-remove" onclick="removeChildFromComposite(${childId})" title="Remover">×</button>
+      </div>
     </div>`;
   });
 
@@ -577,6 +590,7 @@ function clearCompositePanel() {
   document.getElementById('subArtRows').innerHTML = '';
   document.getElementById('compositeTotalVal').textContent = '0,00 €';
   document.getElementById('compositePanel').style.display = 'none';
+  document.getElementById('articleList').classList.remove('composite-active');
 }
 
 // ─── COLUMN RESIZE ───────────────────────────────────────────────
@@ -955,14 +969,11 @@ function updateRowPrice(id) {
 function selectArticle(id) {
   // If composite mode is active, clicking a different item adds it as a child
   if (compositeParentId !== null && id !== compositeParentId) {
-    const child = ITEMS.find(i => i.id === id);
-    if (child && child.hasUnit) {
-      addChildToComposite(id);
-      // Flash the row to show it was added
-      const row = document.getElementById('row_'+id);
-      if (row) { row.style.background='#fef3d0'; setTimeout(()=>row.style.background='',400); }
-      return;
-    }
+    addChildToComposite(id);
+    // Flash the row to show it was added
+    const row = document.getElementById('row_'+id);
+    if (row) { row.style.background='#fef3d0'; setTimeout(()=>row.style.background='',400); }
+    return;
   }
 
   // Deselect previous
@@ -991,6 +1002,7 @@ function selectArticle(id) {
   // Close composite panel when switching to a different parent item
   if (compositeParentId !== null && compositeParentId !== id) {
     document.getElementById('compositePanel').style.display = 'none';
+    document.getElementById('articleList').classList.remove('composite-active');
     compositeParentId = null;
   }
 
