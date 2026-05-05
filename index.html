@@ -52,8 +52,12 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .art-row{display:grid;grid-template-columns:var(--col-desc,1fr) var(--col-unit,65px) var(--col-qty,85px) var(--col-price,100px);gap:0;border-bottom:1px solid #ebebeb;cursor:pointer;transition:background .1s}
 .art-row:hover{background:var(--green-xl)}
 .art-row.selected{background:var(--green-l);border-left:3px solid var(--green3)}
-.art-row.no-qty{cursor:default;opacity:.65}
-.art-row.no-qty:hover{background:transparent}
+.art-row.art-row-parent{background:var(--bg);border-left:3px solid transparent}
+.art-row.art-row-parent:hover{background:var(--green-xl);cursor:pointer}
+.art-row.art-row-parent.selected{background:var(--green-l);border-left:3px solid var(--green3)}
+.art-row.composite-child{border-left:3px solid var(--amber);background:#fffcf5}
+.art-row.composite-child:hover{background:#fff8e8}
+.art-row.composite-child.selected{background:#fef3d0;border-left:3px solid var(--amber)}
 .art-row.selected .art-ref,.art-row.selected .art-desc{color:var(--green)}
 .art-cell{padding:7px 10px;font-size:12px;color:var(--ink2);display:flex;align-items:center}
 .art-cell.ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);min-width:0}
@@ -355,8 +359,12 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       <!-- COMPOSITE PRICE PANEL -->
       <div class="composite-panel" id="compositePanel">
         <div class="composite-title">
-          <span>🧩 Preço composto por sub-artigos</span>
-          <button class="btn-composite" onclick="addSubArt()">+ Adicionar sub-artigo</button>
+          <span>🧩 Preço composto — clica nos sub-artigos na lista</span>
+          <button class="btn-composite" onclick="clearCompositePanel()">Cancelar</button>
+        </div>
+        <div style="font-size:11px;color:var(--amber);margin-bottom:6px;line-height:1.4">
+          Artigo pai: <strong id="compositeParentLabel">—</strong><br>
+          Clica nos artigos da lista para os adicionar. Define o preço de cada um.
         </div>
         <div id="subArtRows"></div>
         <div class="composite-total">
@@ -453,46 +461,90 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 
 <script>
 // ─── COMPOSITE PRICE ─────────────────────────────────────────────
-let subArtCounter = 0;
+// Composite mode: user selects a PARENT item (no unit), then picks
+// CHILD items (with units/prices) to sum into it.
+// OR: user selects any item and manually adds sub-article prices.
+
+let compositeParentId = null; // the item that will receive the summed price
 
 function toggleComposite() {
   const panel = document.getElementById('compositePanel');
   const showing = panel.style.display === 'block';
-  panel.style.display = showing ? 'none' : 'block';
-  if (!showing && document.getElementById('subArtRows').children.length === 0) {
-    addSubArt(); // add first row automatically
+  if (showing) {
+    clearCompositePanel();
+  } else {
+    panel.style.display = 'block';
+    compositeParentId = SELECTED_ID;
+    const parent = ITEMS.find(i=>i.id===SELECTED_ID);
+    const lbl = document.getElementById('compositeParentLabel');
+    if (lbl && parent) lbl.textContent = parent.desc.substring(0,50);
+    renderCompositePanel();
   }
 }
 
-function addSubArt() {
-  const id = ++subArtCounter;
-  const it = ITEMS.find(i => i.id === SELECTED_ID);
-  const unit = it ? it.unit : '';
-  const row = document.createElement('div');
-  row.className = 'subart-row';
-  row.id = 'subart_' + id;
-  row.innerHTML = `
-    <input class="subart-desc" placeholder="Descrição do sub-artigo..." type="text">
-    <input class="subart-price" type="number" step="0.01" placeholder="0.00" oninput="updateCompositeTotal()">
-    <span class="subart-unit">€/${unit}</span>
-    <button class="subart-remove" onclick="removeSubArt(${id})" title="Remover">×</button>`;
-  document.getElementById('subArtRows').appendChild(row);
-  row.querySelector('.subart-desc').focus();
+function renderCompositePanel() {
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  if (!parent) return;
+
+  // Show which children are already linked
+  const childIds = parent.compositeChildren || [];
+  let rows = '';
+  childIds.forEach(childId => {
+    const child = ITEMS.find(i => i.id === childId);
+    if (!child) return;
+    rows += `<div class="subart-row" id="subart_${childId}">
+      <div class="subart-desc" style="flex:1;font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+           title="${child.desc}">${child.desc.substring(0,50)}</div>
+      <input class="subart-price" type="number" step="0.01" placeholder="0.00"
+             value="${child.price||''}" oninput="updateChildPrice(${childId},this.value)">
+      <span class="subart-unit" style="font-size:10px">€/${child.unit||'—'}</span>
+      <button class="subart-remove" onclick="removeChildFromComposite(${childId})" title="Remover">×</button>
+    </div>`;
+  });
+
+  document.getElementById('subArtRows').innerHTML = rows ||
+    '<div style="font-size:12px;color:var(--ink3);padding:4px 0">Clica em artigos da lista para os adicionar ao composto ↓</div>';
+  updateCompositeTotal();
 }
 
-function removeSubArt(id) {
-  const el = document.getElementById('subart_' + id);
-  if (el) el.remove();
+function addChildToComposite(childId) {
+  // Called when user clicks an item in the list while composite mode is active
+  if (compositeParentId === null) return false;
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  const child  = ITEMS.find(i => i.id === childId);
+  if (!parent || !child || child.id === compositeParentId) return false;
+  if (!parent.compositeChildren) parent.compositeChildren = [];
+  if (parent.compositeChildren.includes(childId)) return false;
+  parent.compositeChildren.push(childId);
+  child.compositeParentId = compositeParentId;
+  renderCompositePanel();
+  updateRowPrice(childId);
+  return true;
+}
+
+function removeChildFromComposite(childId) {
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  const child  = ITEMS.find(i => i.id === childId);
+  if (parent) parent.compositeChildren = (parent.compositeChildren||[]).filter(id=>id!==childId);
+  if (child)  child.compositeParentId = null;
+  renderCompositePanel();
+  updateRowPrice(childId);
+}
+
+function updateChildPrice(childId, val) {
+  const child = ITEMS.find(i => i.id === childId);
+  if (child) {
+    child.price = parseFloat(val)||null;
+    updateRowPrice(childId);
+  }
   updateCompositeTotal();
 }
 
 function updateCompositeTotal() {
-  const rows = document.querySelectorAll('#subArtRows .subart-row');
-  let total = 0;
-  rows.forEach(row => {
-    const p = parseFloat(row.querySelector('.subart-price').value) || 0;
-    total += p;
-  });
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  if (!parent) return 0;
+  const children = (parent.compositeChildren||[]).map(id => ITEMS.find(i=>i.id===id)).filter(Boolean);
+  const total = children.reduce((s,c) => s+(parseFloat(c.price)||0), 0);
   document.getElementById('compositeTotalVal').textContent =
     total.toLocaleString('pt-PT', {minimumFractionDigits:2}) + ' €';
   return total;
@@ -500,24 +552,31 @@ function updateCompositeTotal() {
 
 function applyCompositePrice() {
   const total = updateCompositeTotal();
-  if (total <= 0) { alert('Adiciona pelo menos um sub-artigo com preço.'); return; }
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  if (!parent) return;
+  if (total <= 0) { alert('Os sub-artigos precisam de ter preços definidos.'); return; }
+  parent.price = total;
   document.getElementById('selPriceInput').value = total.toFixed(2);
-  applyManualPrice(total);
-  // Store sub-art breakdown on the item
-  const it = ITEMS.find(i => i.id === SELECTED_ID);
-  if (it) {
-    it.subArts = Array.from(document.querySelectorAll('#subArtRows .subart-row')).map(row => ({
-      desc: row.querySelector('.subart-desc').value,
-      price: parseFloat(row.querySelector('.subart-price').value) || 0
-    }));
-  }
+  updateRowPrice(compositeParentId);
+  updateFooter();
+  // Mark composite children visually
+  (parent.compositeChildren||[]).forEach(id => updateRowPrice(id));
 }
 
 function clearCompositePanel() {
+  // Unlink all children from this parent
+  const parent = ITEMS.find(i => i.id === compositeParentId);
+  if (parent) {
+    (parent.compositeChildren||[]).forEach(childId => {
+      const child = ITEMS.find(i => i.id === childId);
+      if (child) { child.compositeParentId = null; updateRowPrice(childId); }
+    });
+    parent.compositeChildren = [];
+  }
+  compositeParentId = null;
   document.getElementById('subArtRows').innerHTML = '';
   document.getElementById('compositeTotalVal').textContent = '0,00 €';
   document.getElementById('compositePanel').style.display = 'none';
-  subArtCounter = 0;
 }
 
 // ─── COLUMN RESIZE ───────────────────────────────────────────────
@@ -715,25 +774,34 @@ function parseMapa(wb, fname) {
       try { qty = parseFloat(g(cols.qty))||0; } catch(e) {}
       try { ep  = parseFloat(g(cols.price))||0; } catch(e) {}
 
-      if (!rawDesc&&!rawRef) return;
-      if (!rawUnit||(!isUnit(rawUnit)&&rawUnit.toLowerCase()!=='vg'&&rawUnit.toLowerCase()!=='m')) {
-        if (rawDesc.length>15) parentDesc=rawDesc;
-        return;
-      }
-      if (rawUnit.length>8||norm(rawUnit)==='nan') return;
-      if (parseFloat(rawUnit)||rawUnit.length>5||rawUnit.includes(' ')) return;
-      // Keep all items; qty/price=0 items shown as read-only
+      // Skip completely empty rows
+      if (!rawDesc && !rawRef) return;
 
-      const descMatch = rawDesc.length<30&&parentDesc.length>rawDesc.length
+      // Determine if this row has a valid unit (measurable item)
+      const hasUnit = rawUnit && isUnit(rawUnit) &&
+                      rawUnit.length<=8 && norm(rawUnit)!=='nan' &&
+                      !parseFloat(rawUnit) && rawUnit.length<=5 && !rawUnit.includes(' ');
+
+      const descMatch = rawDesc.length<30 && parentDesc.length>rawDesc.length
         ? parentDesc+' '+rawDesc : rawDesc;
 
+      // ALL rows go into ITEMS — with or without unit
+      // hasUnit=false means it's a section header / sub-description / composite parent
       ITEMS.push({
         id: ITEMS.length, sheet, ref: rawRef,
-        desc: rawDesc, descMatch, parentDesc: rawDesc.length<30?parentDesc:'',
+        desc: rawDesc, descMatch,
+        parentDesc: rawDesc.length<30 ? parentDesc : '',
         unit: rawUnit, qty, existingPrice: ep,
         price: ep||null,
-        rowIndex: ri, priceCol: cols.price, totalCol: cols.total
+        hasUnit,                    // can receive a direct price
+        isParent: !hasUnit,         // section header or composite parent
+        rowIndex: ri, priceCol: cols.price, totalCol: cols.total,
+        compositeChildren: [],      // ids of child items (for composite price)
+        compositeParentId: null     // id of parent item (if this is a child)
       });
+
+      // Update parentDesc for next items
+      if (!hasUnit && rawDesc.length > 15) parentDesc = rawDesc;
     });
   });
 }
@@ -810,8 +878,10 @@ function calcGT() {
 }
 
 function renderList() {
-  document.getElementById('mapaTitle').textContent = ORIGINAL_FNAME.replace('.xlsx','').replace('.xls','');
-  document.getElementById('mapaMeta').textContent = `${ITEMS.length} artigos · ${ORIGINAL_WB.SheetNames.length} folha(s)`;
+  document.getElementById('mapaTitle').textContent = ORIGINAL_FNAME.replace(/\.xlsx?$/i,'');
+  const withUnit = ITEMS.filter(i=>i.hasUnit).length;
+  document.getElementById('mapaMeta').textContent =
+    `${ITEMS.length} linhas · ${withUnit} com quantidade · ${ORIGINAL_WB.SheetNames.length} folha(s)`;
 
   const list = document.getElementById('articleList');
   let html = '';
@@ -822,27 +892,46 @@ function renderList() {
       lastSheet = it.sheet;
       html += `<div class="art-section">${it.sheet}</div>`;
     }
-    const hasQty = it.qty > 0;
-    const priceHtml = it.price
-      ? `<span class="price-val">${it.price.toFixed(2)}</span>`
-      : hasQty ? `<span class="price-empty">—</span>` : `<span class="price-empty" style="opacity:.3">n/a</span>`;
-    const parentHtml = it.parentDesc
-      ? `<div class="art-desc-parent">${it.parentDesc}</div>` : '';
-    html += `<div class="art-row${SELECTED_ID===it.id?' selected':''}${!hasQty?' no-qty':''}" onclick="${hasQty?`selectArticle(${it.id})`:'void(0)'}" id="row_${it.id}" title="${!hasQty?'Artigo sem quantidade — preço não aplicável':''}">
-      <div class="art-cell desc">
-        <div class="art-desc-main">${it.desc}</div>
-        ${parentHtml}
-      </div>
-      <div class="art-cell unit">${it.unit}</div>
-      <div class="art-cell qty">${it.qty>0?it.qty.toLocaleString('pt-PT'):'—'}</div>
-      <div class="art-cell price" id="price_${it.id}">${priceHtml}</div>
-    </div>`;
+
+    const sel = SELECTED_ID===it.id ? ' selected' : '';
+
+    if (it.isParent) {
+      // No unit — section header or composite parent
+      const isCompParent = it.compositeChildren && it.compositeChildren.length > 0;
+      const priceHtml = it.price
+        ? `<span class="price-val">${it.price.toFixed(2)}</span>`
+        : isCompParent
+          ? `<span class="price-empty" style="color:var(--amber)">∑ composto</span>`
+          : `<span class="price-empty" style="opacity:.35">—</span>`;
+      html += `<div class="art-row art-row-parent${sel}" onclick="selectArticle(${it.id})" id="row_${it.id}">
+        <div class="art-cell desc">
+          <div class="art-desc-main" style="font-weight:500;color:var(--ink)">${it.desc}</div>
+        </div>
+        <div class="art-cell unit" style="color:var(--ink3);font-size:11px">${it.unit||''}</div>
+        <div class="art-cell qty" style="color:var(--ink3)">${it.qty>0?it.qty.toLocaleString('pt-PT'):'—'}</div>
+        <div class="art-cell price" id="price_${it.id}">${priceHtml}</div>
+      </div>`;
+    } else {
+      // Has unit — measurable item
+      const isChild = it.compositeParentId !== null;
+      const priceHtml = it.price
+        ? `<span class="price-val">${it.price.toFixed(2)}</span>`
+        : `<span class="price-empty">—</span>`;
+      html += `<div class="art-row${isChild?' composite-child':''}${sel}" onclick="selectArticle(${it.id})" id="row_${it.id}">
+        <div class="art-cell desc" style="${isChild?'padding-left:28px':''}">
+          <div class="art-desc-main">${it.desc}</div>
+          ${it.parentDesc?`<div class="art-desc-parent">${it.parentDesc}</div>`:''}
+        </div>
+        <div class="art-cell unit">${it.unit}</div>
+        <div class="art-cell qty">${it.qty>0?it.qty.toLocaleString('pt-PT'):'—'}</div>
+        <div class="art-cell price" id="price_${it.id}">${priceHtml}</div>
+      </div>`;
+    }
   });
 
   list.innerHTML = html;
   updateFooter();
 }
-
 function updateFooter() {
   const filled = ITEMS.filter(i=>i.price>0).length;
   const gt = calcGT();
@@ -864,6 +953,18 @@ function updateRowPrice(id) {
 
 // ─── SELECT ARTICLE ──────────────────────────────────────────────
 function selectArticle(id) {
+  // If composite mode is active, clicking a different item adds it as a child
+  if (compositeParentId !== null && id !== compositeParentId) {
+    const child = ITEMS.find(i => i.id === id);
+    if (child && child.hasUnit) {
+      addChildToComposite(id);
+      // Flash the row to show it was added
+      const row = document.getElementById('row_'+id);
+      if (row) { row.style.background='#fef3d0'; setTimeout(()=>row.style.background='',400); }
+      return;
+    }
+  }
+
   // Deselect previous
   if (SELECTED_ID !== null) {
     const prev = document.getElementById('row_'+SELECTED_ID);
@@ -887,19 +988,10 @@ function selectArticle(id) {
   document.getElementById('selPriceInput').value = it.price ? it.price.toFixed(2) : '';
   document.getElementById('selPriceUnit').textContent = `€/${it.unit}`;
 
-  // Restore composite state for this item or clear it
-  clearCompositePanel();
-  const prevSubArts = it.subArts;
-  if (prevSubArts && prevSubArts.length) {
-    document.getElementById('compositePanel').style.display = 'block';
-    prevSubArts.forEach(sa => {
-      addSubArt();
-      const rows = document.querySelectorAll('#subArtRows .subart-row');
-      const last = rows[rows.length - 1];
-      last.querySelector('.subart-desc').value = sa.desc;
-      last.querySelector('.subart-price').value = sa.price;
-    });
-    updateCompositeTotal();
+  // Close composite panel when switching to a different parent item
+  if (compositeParentId !== null && compositeParentId !== id) {
+    document.getElementById('compositePanel').style.display = 'none';
+    compositeParentId = null;
   }
 
   // Trigger automatic search with article description
