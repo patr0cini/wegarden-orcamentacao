@@ -1198,7 +1198,6 @@ function showSPStep(n) {
 }
 
 function connectSharePoint() {
-  // Open OAuth in a popup — keeps the main page (and all work) intact
   const w = 600, he = 700;
   const left = (screen.width  - w) / 2;
   const top  = (screen.height - he) / 2;
@@ -1207,13 +1206,34 @@ function connectSharePoint() {
     'sp_login',
     `width=${w},height=${he},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
   );
-  // Poll until popup closes
-  const timer = setInterval(() => {
-    if (!popup || popup.closed) {
+  if (!popup) {
+    alert('O browser bloqueou o popup. Autoriza popups para este site e tenta de novo.');
+    return;
+  }
+  // Show loading state while waiting
+  document.getElementById('spStep1').innerHTML =
+    '<div style="text-align:center;padding:1rem;color:var(--ink3);font-size:13px">' +
+    '⏳ A aguardar login Microsoft...<br><small>Completa o login na janela que abriu</small></div>';
+
+  // Poll until popup closes, then re-check session
+  const timer = setInterval(async () => {
+    if (popup.closed) {
       clearInterval(timer);
-      checkSPConnection(); // re-check if login succeeded
+      // Small delay to let the server session settle
+      await new Promise(r => setTimeout(r, 500));
+      const resp = await fetch('/auth/sp-status');
+      const data = await resp.json();
+      if (data.connected) {
+        showSPStep(2);
+        loadSPSites();
+      } else {
+        // Login failed or cancelled — restore button
+        document.getElementById('spStep1').innerHTML =
+          '<div class="sp-note" style="margin-bottom:1rem">ℹ️ Liga a tua conta Microsoft para fazer upload directamente para o SharePoint. Só precisas de autorizar uma vez.</div>' +
+          '<button class="btn-sp-primary" onclick="connectSharePoint()"><span style="font-size:16px;margin-right:6px">🔐</span> Ligar conta Microsoft</button>';
+      }
     }
-  }, 500);
+  }, 600);
 }
 
 async function disconnectSP() {
