@@ -2092,37 +2092,42 @@ function clearEdSearch() {
 }
 
 // ── EXPORT EDITOR EXCEL ───────────────────────────────────────────
-function exportEditorExcel() {
+async function exportEditorExcel() {
   const obraName = document.getElementById('editorObraName').value || 'Novo Orçamento';
-  const wb = XLSX.utils.book_new();
-  const rows = [
-    ['WeGarden', '', '', '', '', ''],
-    [obraName, '', '', '', '', ''],
-    ['Artigo', 'Descrição', 'Quantidade', 'Unidade', 'Preço Un.', 'Preço Total'],
-  ];
+  const btn = document.querySelector('[onclick="exportEditorExcel()"]');
+  if (btn) { btn.textContent = '⏳ A gerar...'; btn.disabled = true; }
 
-  ORCAMENTO.forEach(row => {
-    if (row.type === 'capitulo') {
-      rows.push([row.ref, row.desc, '', '', '', '']);
-    } else if (row.type === 'subcap') {
-      rows.push([row.ref, row.desc, '', '', '', '']);
-    } else {
-      const total = (row.qty && row.price) ? row.qty * row.price : null;
-      rows.push([row.ref, row.desc, row.qty || '', row.unit || '', row.price || '', total || '']);
-    }
-  });
+  try {
+    const rows = ORCAMENTO.map(row => ({
+      type:  row.type,
+      ref:   row.ref   || '',
+      desc:  row.desc  || '',
+      qty:   row.qty   || null,
+      unit:  row.unit  || '',
+      price: row.price || null
+    }));
 
-  // Grand total row
-  const gt = calcGrandTotal();
-  rows.push(['', 'TOTAL GERAL', '', '', '', gt || '']);
+    const resp = await fetch('/api/export-editor', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({obra: obraName, rows})
+    });
 
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  // Set column widths
-  ws['!cols'] = [{wch:12},{wch:40},{wch:12},{wch:10},{wch:12},{wch:14}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Budget');
+    if (!resp.ok) { alert('Erro ao exportar: ' + await resp.text()); return; }
 
-  const fname = obraName.replace(/[/\\:*?"<>|]/g,'_') + '.xlsx';
-  XLSX.writeFile(wb, fname);
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = obraName.replace(/[/\\:*?"<>|]/g,'_') + '.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  } finally {
+    if (btn) { btn.textContent = '⬇ Exportar Excel'; btn.disabled = false; }
+  }
 }
 
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); } });
