@@ -313,7 +313,8 @@ def generate_editor_excel(obra_name, rows_data):
 
     # Total row
     ws.cell(row=excel_row, column=2).value = 'TOTAL GERAL'
-    ws.cell(row=excel_row, column=6).value = f'=SUM(F4:F{last})'.replace('{last}', str(excel_row-1))
+    last_data_row = excel_row - 1
+    ws.cell(row=excel_row, column=6).value = f'=SUM(F4:F{last_data_row})'
     for col in range(1, 7):
         cp_style(ws_tpl.cell(row=3, column=col), ws.cell(row=excel_row, column=col))
     # Clear leftover template rows
