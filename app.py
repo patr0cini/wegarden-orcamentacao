@@ -1,10 +1,11 @@
 import base64, io, os
-from flask import Flask, request, send_file, session, redirect
+from flask import Flask, request, send_file, session, redirect, send_from_directory
 import openpyxl
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'wegarden-secret-2026')
 APP_PASSWORD   = os.environ.get('APP_PASSWORD', 'wegarden2026')
+STATIC_DIR     = os.path.join(os.path.dirname(__file__), 'static')
 
 def authed(): return session.get('auth') is True
 
@@ -38,7 +39,7 @@ button:hover{{background:#2d5a3d}}
   </form>
 </div></body></html>'''
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         if request.form.get('password') == APP_PASSWORD:
@@ -54,31 +55,34 @@ def logout():
 
 @app.route('/')
 def index():
-    if not authed(): return redirect('/login')
-    return app.send_static_file('index.html')
+    if not authed():
+        return redirect('/login')
+    return send_from_directory(STATIC_DIR, 'index.html')
 
 @app.route('/api/fill-excel', methods=['POST'])
 def fill_excel():
-    if not authed(): return 'Nao autorizado', 401
+    if not authed():
+        return 'Nao autorizado', 401
     try:
         data     = request.get_json(force=True)
         filename = data.get('filename', 'orcamento.xlsx')
         wb       = openpyxl.load_workbook(io.BytesIO(base64.b64decode(data['file_base64'])))
         for it in data['prices']:
-            if it['sheet'] not in wb.sheetnames: continue
+            if it['sheet'] not in wb.sheetnames:
+                continue
             ws = wb[it['sheet']]
             r  = it['row']
             if it['priceCol'] >= 0:
-                ws.cell(row=r, column=it['priceCol']+1).value = it['price']
+                ws.cell(row=r, column=it['priceCol'] + 1).value = it['price']
             if it.get('total') is not None and it['totalCol'] >= 0:
-                ws.cell(row=r, column=it['totalCol']+1).value = it['total']
+                ws.cell(row=r, column=it['totalCol'] + 1).value = it['total']
         out = io.BytesIO()
         wb.save(out)
         out.seek(0)
         return send_file(out,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name=filename.rsplit('.',1)[0]+'_preenchido.xlsx')
+            download_name=filename.rsplit('.', 1)[0] + '_preenchido.xlsx')
     except Exception as e:
         return str(e), 500
 
