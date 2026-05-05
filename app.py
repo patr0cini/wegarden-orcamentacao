@@ -231,9 +231,16 @@ def sp_upload():
                 ws.cell(row=r,column=it['totalCol']+1).value=it['total']
         out = io.BytesIO(); wb.save(out); excel_bytes = out.getvalue()
 
-        out_name = filename.rsplit('.',1)[0]+'_preenchido.xlsx'
+        # Clean filename — remove special chars that break URLs
+        import re
+        safe_name = re.sub(r'[\x00-\x1f,;\[\]{}|\\^`]', '_', filename.rsplit('.',1)[0]) + '_preenchido.xlsx'
         token = session['sp_access_token']
-        upload_url = f'https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{folder_id}:/{out_name}:/content'
+        # Encode the filename for use in URL
+        encoded_name = urllib.parse.quote(safe_name, safe='')
+        # Clean drive_id and folder_id
+        clean_drive  = drive_id.strip().encode('ascii','ignore').decode()
+        clean_folder = folder_id.strip().encode('ascii','ignore').decode()
+        upload_url = f'https://graph.microsoft.com/v1.0/drives/{clean_drive}/items/{clean_folder}:/{encoded_name}:/content'
         req = urllib.request.Request(upload_url, data=excel_bytes, method='PUT')
         req.add_header('Authorization','Bearer '+token)
         req.add_header('Content-Type','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
