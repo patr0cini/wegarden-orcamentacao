@@ -468,6 +468,8 @@ function loadMapa(e) {
   r.onload = ev => {
     try {
       const wb = XLSX.read(ev.target.result, {type:'array'});
+      // Save raw bytes so we can send the original file untouched to the server
+      window.ORIGINAL_FILE_BYTES = ev.target.result;
       parseMapa(wb, file.name);
       mapaReady = true;
       const uc = document.getElementById('ucMapa');
@@ -739,8 +741,15 @@ async function exportForClaude() {
   btn.disabled = true;
 
   try {
-    // Send original file as binary + prices to backend
-    const wbBinary = XLSX.write(ORIGINAL_WB, {bookType:'xlsx', type:'base64'});
+    // Send the ORIGINAL raw file bytes — never re-serialise via SheetJS
+    // This preserves 100% of formatting, merged cells, styles, etc.
+    const rawBytes = window.ORIGINAL_FILE_BYTES instanceof ArrayBuffer
+      ? window.ORIGINAL_FILE_BYTES
+      : window.ORIGINAL_FILE_BYTES.buffer;
+    const uint8 = new Uint8Array(rawBytes);
+    let binary = '';
+    for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i]);
+    const wbBinary = btoa(binary);
     const payload = {
       filename: ORIGINAL_FNAME,
       file_base64: wbBinary,
