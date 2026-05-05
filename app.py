@@ -1,9 +1,10 @@
-import base64, io, os
+import base64, io, os, json
 from flask import Flask, request, send_file, session, redirect, send_from_directory
 import openpyxl
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-STATIC_DIR   = os.path.join(BASE_DIR, 'static')
+# index.html may be in static/ or directly in BASE_DIR
+STATIC_DIR   = os.path.join(BASE_DIR, 'static') if os.path.exists(os.path.join(BASE_DIR, 'static', 'index.html')) else BASE_DIR
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'wegarden-secret-2026')
@@ -60,10 +61,18 @@ def logout():
 def index():
     if not authed():
         return redirect('/login')
-    index_path = os.path.join(STATIC_DIR, 'index.html')
-    if not os.path.exists(index_path):
-        return f'index.html not found at {index_path}. Static dir: {os.listdir(BASE_DIR)}', 500
     return send_from_directory(STATIC_DIR, 'index.html')
+
+@app.route('/debug')
+def debug():
+    return json.dumps({
+        'BASE_DIR': BASE_DIR,
+        'STATIC_DIR': STATIC_DIR,
+        'base_files': os.listdir(BASE_DIR),
+        'static_exists': os.path.exists(os.path.join(BASE_DIR, 'static')),
+        'index_in_base': os.path.exists(os.path.join(BASE_DIR, 'index.html')),
+        'index_in_static': os.path.exists(os.path.join(BASE_DIR, 'static', 'index.html')),
+    }, indent=2), 200, {'Content-Type': 'application/json'}
 
 @app.route('/api/fill-excel', methods=['POST'])
 def fill_excel():
@@ -91,19 +100,6 @@ def fill_excel():
             download_name=filename.rsplit('.', 1)[0] + '_preenchido.xlsx')
     except Exception as e:
         return str(e), 500
-
-
-@app.route('/debug')
-def debug():
-    import json
-    info = {
-        'BASE_DIR': BASE_DIR,
-        'STATIC_DIR': STATIC_DIR,
-        'base_files': os.listdir(BASE_DIR),
-        'static_exists': os.path.exists(STATIC_DIR),
-        'static_files': os.listdir(STATIC_DIR) if os.path.exists(STATIC_DIR) else []
-    }
-    return json.dumps(info, indent=2), 200, {'Content-Type': 'application/json'}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
