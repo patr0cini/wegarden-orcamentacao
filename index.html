@@ -236,6 +236,68 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
   cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
 .btn-close:hover{background:var(--bg2)}
 
+
+/* ── EDITOR DE ORÇAMENTO ─── */
+.editor-page{display:none;flex-direction:column;height:calc(100vh - 52px);background:var(--bg)}
+.editor-page.active{display:flex}
+.editor-top{background:var(--white);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.editor-obra-input{font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink);
+  border:none;background:transparent;outline:none;flex:1;min-width:200px}
+.editor-obra-input:focus{border-bottom:2px solid var(--green3)}
+.editor-obra-input::placeholder{color:var(--ink3)}
+.editor-actions{display:flex;gap:6px;margin-left:auto}
+.editor-body{display:flex;flex:1;overflow:hidden}
+.editor-left{flex:1;overflow-y:auto;background:var(--white)}
+.editor-right{width:360px;border-left:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;background:var(--bg);flex-shrink:0}
+
+/* Budget table */
+.budget-table{width:100%;border-collapse:collapse;font-size:13px}
+.budget-table th{background:var(--green-900,#0d2818);color:#fff;font-size:11px;font-weight:600;
+  letter-spacing:.4px;padding:8px 10px;text-align:left;position:sticky;top:0;z-index:10}
+.budget-table th:not(:first-child){text-align:right}
+.bt-row-capitulo td{background:#1e3a28;color:#fff;font-weight:600;font-size:13px}
+.bt-row-subcap td{background:var(--green-100,#e8f7ed);color:var(--ink);font-weight:500;font-size:12px}
+.bt-row-artigo td{background:var(--white);color:var(--ink);vertical-align:top}
+.bt-row-artigo:hover td{background:var(--green-xl)}
+.budget-table td{padding:0;border-bottom:1px solid var(--border)}
+.bt-cell{padding:6px 10px;width:100%}
+.bt-input{width:100%;border:none;background:transparent;font-family:inherit;font-size:inherit;
+  color:inherit;outline:none;padding:0}
+.bt-input:focus{background:rgba(255,255,255,.15);border-radius:3px}
+.bt-row-capitulo .bt-input{color:#fff;font-weight:600}
+.bt-input-num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
+.bt-ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);white-space:nowrap}
+.bt-total{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--green);
+  text-align:right;padding:6px 10px;white-space:nowrap}
+.bt-cap-total{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:#fff;
+  text-align:right;padding:6px 10px}
+.bt-footer{background:var(--green-900,#0d2818);color:#fff}
+.bt-footer td{padding:10px 10px;font-weight:600}
+.bt-grand-total{font-family:'DM Mono',monospace;font-size:15px;color:#fff;text-align:right}
+
+/* Add row buttons */
+.add-row-bar{display:flex;gap:6px;padding:8px 10px;background:var(--bg);border-top:1px solid var(--border)}
+.btn-add-row{padding:5px 12px;border-radius:6px;border:1px dashed var(--border);background:transparent;
+  font-size:12px;color:var(--ink3);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-add-row:hover{border-color:var(--green3);color:var(--green);background:var(--green-xl)}
+.btn-add-row.cap{border-color:var(--green3);color:var(--green)}
+.row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.bt-row-artigo:hover .row-actions,.bt-row-subcap:hover .row-actions,.bt-row-capitulo:hover .row-actions{opacity:1}
+.btn-row-act{width:22px;height:22px;border:none;background:transparent;cursor:pointer;
+  border-radius:4px;font-size:12px;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+.btn-row-act:hover{background:var(--bg2);color:var(--ink)}
+.btn-row-act.del:hover{background:#fde8e8;color:var(--red)}
+
+/* Right panel search */
+.editor-search-panel{display:flex;flex-direction:column;height:100%}
+.esp-header{padding:.75rem 1rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.esp-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.esp-desc{font-size:11px;color:var(--ink3);margin-bottom:8px;line-height:1.4}
+.esp-results{flex:1;overflow-y:auto;padding:.5rem 0}
+.esp-empty{padding:2rem 1rem;text-align:center;color:var(--ink3);font-size:12px}
+
 /* ── SCROLLBAR ── *//* ── PREVIEW MODAL ── */
 .sp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
@@ -287,6 +349,68 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
   cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;color:var(--ink3)}
 .btn-close:hover{background:var(--bg2)}
 
+
+/* ── EDITOR DE ORÇAMENTO ─── */
+.editor-page{display:none;flex-direction:column;height:calc(100vh - 52px);background:var(--bg)}
+.editor-page.active{display:flex}
+.editor-top{background:var(--white);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.editor-obra-input{font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink);
+  border:none;background:transparent;outline:none;flex:1;min-width:200px}
+.editor-obra-input:focus{border-bottom:2px solid var(--green3)}
+.editor-obra-input::placeholder{color:var(--ink3)}
+.editor-actions{display:flex;gap:6px;margin-left:auto}
+.editor-body{display:flex;flex:1;overflow:hidden}
+.editor-left{flex:1;overflow-y:auto;background:var(--white)}
+.editor-right{width:360px;border-left:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;background:var(--bg);flex-shrink:0}
+
+/* Budget table */
+.budget-table{width:100%;border-collapse:collapse;font-size:13px}
+.budget-table th{background:var(--green-900,#0d2818);color:#fff;font-size:11px;font-weight:600;
+  letter-spacing:.4px;padding:8px 10px;text-align:left;position:sticky;top:0;z-index:10}
+.budget-table th:not(:first-child){text-align:right}
+.bt-row-capitulo td{background:#1e3a28;color:#fff;font-weight:600;font-size:13px}
+.bt-row-subcap td{background:var(--green-100,#e8f7ed);color:var(--ink);font-weight:500;font-size:12px}
+.bt-row-artigo td{background:var(--white);color:var(--ink);vertical-align:top}
+.bt-row-artigo:hover td{background:var(--green-xl)}
+.budget-table td{padding:0;border-bottom:1px solid var(--border)}
+.bt-cell{padding:6px 10px;width:100%}
+.bt-input{width:100%;border:none;background:transparent;font-family:inherit;font-size:inherit;
+  color:inherit;outline:none;padding:0}
+.bt-input:focus{background:rgba(255,255,255,.15);border-radius:3px}
+.bt-row-capitulo .bt-input{color:#fff;font-weight:600}
+.bt-input-num{text-align:right;font-family:'DM Mono',monospace;font-size:12px}
+.bt-ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);white-space:nowrap}
+.bt-total{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--green);
+  text-align:right;padding:6px 10px;white-space:nowrap}
+.bt-cap-total{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:#fff;
+  text-align:right;padding:6px 10px}
+.bt-footer{background:var(--green-900,#0d2818);color:#fff}
+.bt-footer td{padding:10px 10px;font-weight:600}
+.bt-grand-total{font-family:'DM Mono',monospace;font-size:15px;color:#fff;text-align:right}
+
+/* Add row buttons */
+.add-row-bar{display:flex;gap:6px;padding:8px 10px;background:var(--bg);border-top:1px solid var(--border)}
+.btn-add-row{padding:5px 12px;border-radius:6px;border:1px dashed var(--border);background:transparent;
+  font-size:12px;color:var(--ink3);cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-add-row:hover{border-color:var(--green3);color:var(--green);background:var(--green-xl)}
+.btn-add-row.cap{border-color:var(--green3);color:var(--green)}
+.row-actions{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.bt-row-artigo:hover .row-actions,.bt-row-subcap:hover .row-actions,.bt-row-capitulo:hover .row-actions{opacity:1}
+.btn-row-act{width:22px;height:22px;border:none;background:transparent;cursor:pointer;
+  border-radius:4px;font-size:12px;color:var(--ink3);display:flex;align-items:center;justify-content:center}
+.btn-row-act:hover{background:var(--bg2);color:var(--ink)}
+.btn-row-act.del:hover{background:#fde8e8;color:var(--red)}
+
+/* Right panel search */
+.editor-search-panel{display:flex;flex-direction:column;height:100%}
+.esp-header{padding:.75rem 1rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.esp-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.esp-desc{font-size:11px;color:var(--ink3);margin-bottom:8px;line-height:1.4}
+.esp-results{flex:1;overflow-y:auto;padding:.5rem 0}
+.esp-empty{padding:2rem 1rem;text-align:center;color:var(--ink3);font-size:12px}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -301,7 +425,10 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
     <div class="logo-dot">🌿</div>
     We Garden
   </div>
-  <div class="header-version">ORÇAMENTAÇÃO v2.0</div>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <span style="font-size:11px;color:var(--green-l);cursor:pointer;opacity:.6" onclick="document.getElementById('fiTabela').click()" title="Actualizar tabela de preços">⟳ tabela preços</span>
+    <div class="header-version">ORÇAMENTAÇÃO v2.0</div>
+  </div>
 </header>
 
 <div class="app" id="mainApp" style="display:none">
@@ -397,6 +524,69 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
     </div>
   </div>
 
+
+  <!-- ══ EDITOR DE ORÇAMENTO ══════════════════════════════════════ -->
+  <div class="editor-page" id="editorPage">
+    <!-- TOP BAR -->
+    <div class="editor-top">
+      <input class="editor-obra-input" id="editorObraName" type="text"
+             placeholder="Nome da Obra..." value="Nova Obra">
+      <div class="editor-actions">
+        <button class="btn btn-sm" onclick="voltarInicio()">← Início</button>
+        <button class="btn btn-sm" onclick="editorAddCapitulo()">+ Capítulo</button>
+        <button class="btn btn-sm btn-green" onclick="exportEditorExcel()">⬇ Exportar Excel</button>
+      </div>
+    </div>
+
+    <div class="editor-body">
+      <!-- LEFT: budget table -->
+      <div class="editor-left">
+        <table class="budget-table" id="budgetTable">
+          <thead>
+            <tr>
+              <th style="width:90px">Artigo</th>
+              <th style="width:40%">Descrição</th>
+              <th style="width:90px;text-align:right">Quant.</th>
+              <th style="width:70px;text-align:right">Unid.</th>
+              <th style="width:90px;text-align:right">P.U. (€)</th>
+              <th style="width:100px;text-align:right">Total (€)</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="budgetBody"></tbody>
+          <tfoot>
+            <tr class="bt-footer">
+              <td colspan="5" style="padding:10px">TOTAL GERAL</td>
+              <td class="bt-grand-total" id="grandTotal">0,00 €</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- RIGHT: search panel -->
+      <div class="editor-right">
+        <div class="editor-search-panel">
+          <div class="esp-header">
+            <div class="esp-title">🔍 Pesquisar preços</div>
+            <div class="esp-desc" id="espDesc">Clica num artigo para pesquisar na tabela de preços</div>
+            <div class="search-mode-tabs" style="margin-top:6px">
+              <button class="smt smt-active" id="edTabAuto" onclick="edSetMode('auto')">⚡ Automática</button>
+              <button class="smt" id="edTabManual" onclick="edSetMode('manual')">🔍 Manual</button>
+            </div>
+            <input class="search-box" id="edSearchBox" type="text"
+                   placeholder="Pesquisar na tabela de preços..."
+                   oninput="edOnSearch(this.value)"
+                   style="margin-top:8px;display:none">
+          </div>
+          <div class="esp-results" id="espResults">
+            <div class="esp-empty">Selecciona um artigo para ver sugestões de preço</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SHAREPOINT MODAL -->
   <div class="sp-modal-overlay" id="spModal" style="display:none" onclick="if(event.target===this)closeSPModal()">
     <div class="sp-modal-box" style="max-width:520px">
@@ -485,17 +675,18 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       <div class="uc-success" id="ucMapaOk" style="display:none"></div>
     </div>
 
-    <!-- TABELA -->
-    <div class="upload-card" id="ucTabela" onclick="document.getElementById('fiTabela').click()">
-      <input type="file" id="fiTabela" accept=".xlsx,.xls" style="display:none" onchange="loadTabela(event)">
-      <div class="uc-icon">💰</div>
-      <div class="uc-title">Tabela de preços <span style="font-size:10px;background:var(--green);color:#fff;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle">integrada</span></div>
-      <div class="uc-sub">Opcional — a tabela já está integrada. Carrega para usar uma versão mais recente.</div>
-      <div class="uc-success" id="ucTabelaOk" style="display:none"></div>
+    <!-- NOVO ORÇAMENTO -->
+    <div class="upload-card" id="ucNovo" onclick="abrirEditorOrcamento()">
+      <div class="uc-icon">✏️</div>
+      <div class="uc-title">Criar novo orçamento</div>
+      <div class="uc-sub">Começa a partir do modelo We Garden — adiciona capítulos, sub-capítulos e artigos</div>
     </div>
 
   </div>
-  <div id="uploadStatus" style="font-size:13px;color:var(--ink3)">Tabela de preços já integrada. Só precisas do mapa de quantidades!</div>
+
+  <!-- Tabela de preços: actualizar subtilmente no header -->
+  <input type="file" id="fiTabela" accept=".xlsx,.xls" style="display:none" onchange="loadTabela(event)">
+  <div id="uploadStatus" style="font-size:13px;color:var(--ink3)">Escolhe uma opção para começar</div>
   <button class="btn btn-green" id="btnStart" style="display:none;padding:10px 28px;font-size:14px" onclick="startApp()">Iniciar →</button>
 </div>
 
@@ -1266,14 +1457,44 @@ async function disconnectSP() {
 async function loadSPSites() {
   const sel = document.getElementById('spSiteSelect');
   sel.innerHTML = '<option>A carregar sites...</option>';
+  showSPStatus('', 'loading');
   try {
     const resp = await fetch('/api/sp-sites');
     const data = await resp.json();
+    if (data.error) {
+      showSPStatus('Erro ao carregar sites: ' + data.error, 'err');
+      sel.innerHTML = '<option value="">Erro — tenta desligar e ligar de novo</option>';
+      return;
+    }
+    if (!data.sites || data.sites.length === 0) {
+      // Fallback: try to get the root site directly
+      sel.innerHTML = '<option value="">Sem sites encontrados — a tentar raiz...</option>';
+      await loadRootSite();
+      return;
+    }
+    sel.innerHTML = '<option value="">-- Selecciona um site --</option>' +
+      data.sites.map(s => {
+        const label = s.name || s.url.split('/').pop() || s.id;
+        return `<option value="${s.id}">${label}</option>`;
+      }).join('');
+    document.getElementById('spStatus').style.display = 'none';
+  } catch(e) {
+    showSPStatus('Erro: ' + e.message, 'err');
+    sel.innerHTML = '<option value="">Erro de ligação</option>';
+  }
+}
+
+async function loadRootSite() {
+  const sel = document.getElementById('spSiteSelect');
+  try {
+    const resp = await fetch('/api/sp-root-site');
+    const data = await resp.json();
     if (data.error) { showSPStatus('Erro: ' + data.error, 'err'); return; }
     sel.innerHTML = '<option value="">-- Selecciona um site --</option>' +
-      data.sites.map(s => `<option value="${s.id}">${s.name} (${s.url.split('/').slice(-2).join('/')})</option>`).join('');
+      data.sites.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    document.getElementById('spStatus').style.display = 'none';
   } catch(e) {
-    showSPStatus('Erro ao carregar sites: ' + e.message, 'err');
+    showSPStatus('Não foi possível carregar sites: ' + e.message, 'err');
   }
 }
 
@@ -1567,6 +1788,339 @@ async function exportForClaude() {
     btn.disabled = false;
   }
 }
+
+// ══ EDITOR DE ORÇAMENTO ══════════════════════════════════════════
+// Data model: array of rows
+// { id, type: 'capitulo'|'subcap'|'artigo', ref, desc, qty, unit, price }
+let ORCAMENTO = [];
+let edNextId  = 1;
+let edSelId   = null;  // currently selected artigo id
+let edMode    = 'auto';
+
+function abrirEditorOrcamento() {
+  document.getElementById('uploadScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('editorPage').classList.add('active');
+  if (ORCAMENTO.length === 0) initOrcamento();
+  renderBudget();
+}
+
+function voltarInicio() {
+  document.getElementById('editorPage').classList.remove('active');
+  document.getElementById('uploadScreen').style.display = 'flex';
+}
+
+function initOrcamento() {
+  ORCAMENTO = [
+    newRow('capitulo', '1', 'Capítulo'),
+    newRow('subcap',   '1.1', 'Sub Capítulo'),
+    newRow('artigo',   '1.1.1', 'Artigo'),
+  ];
+}
+
+function newRow(type, ref, desc) {
+  return { id: edNextId++, type, ref, desc, qty: null, unit: '', price: null };
+}
+
+function calcRef(type) {
+  // Auto-generate next ref based on existing rows
+  const caps    = ORCAMENTO.filter(r => r.type === 'capitulo');
+  const lastCap = caps.length ? caps[caps.length - 1].ref : '0';
+  const capNum  = parseInt(lastCap) || caps.length;
+
+  if (type === 'capitulo') return String(capNum + 1);
+
+  const subcaps    = ORCAMENTO.filter(r => r.type === 'subcap' && r.ref.startsWith(lastCap + '.'));
+  const lastSubcap = subcaps.length ? subcaps[subcaps.length - 1].ref : lastCap + '.0';
+  const subcapNum  = parseInt(lastSubcap.split('.')[1]) || subcaps.length;
+
+  if (type === 'subcap') return `${capNum}.${subcapNum + 1}`;
+
+  const arts    = ORCAMENTO.filter(r => r.type === 'artigo' && r.ref.startsWith(lastSubcap.split('.').slice(0,2).join('.') + '.'));
+  const artNum  = arts.length;
+  const scRef   = lastSubcap;
+  return `${scRef}.${artNum + 1}`;
+}
+
+function editorAddCapitulo() {
+  ORCAMENTO.push(newRow('capitulo', calcRef('capitulo'), 'Novo Capítulo'));
+  renderBudget();
+  // focus on the new row
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('#budgetBody .bt-input');
+    if (inputs.length) inputs[inputs.length - 2].focus();
+  }, 50);
+}
+
+function editorAddAfter(afterId, type) {
+  const idx = ORCAMENTO.findIndex(r => r.id === afterId);
+  const ref = calcRef(type);
+  const label = type === 'capitulo' ? 'Novo Capítulo' : type === 'subcap' ? 'Novo Sub-Capítulo' : 'Novo Artigo';
+  ORCAMENTO.splice(idx + 1, 0, newRow(type, ref, label));
+  renderBudget();
+  setTimeout(() => {
+    const newRow_ = document.getElementById('edrow_' + ORCAMENTO[idx + 1].id);
+    if (newRow_) {
+      const inp = newRow_.querySelectorAll('.bt-input')[1];
+      if (inp) { inp.focus(); inp.select(); }
+    }
+  }, 50);
+}
+
+function editorDeleteRow(id) {
+  ORCAMENTO = ORCAMENTO.filter(r => r.id !== id);
+  if (edSelId === id) { edSelId = null; clearEdSearch(); }
+  renderBudget();
+}
+
+function updateRow(id, field, val) {
+  const row = ORCAMENTO.find(r => r.id === id);
+  if (!row) return;
+  row[field] = field === 'qty' || field === 'price' ? (parseFloat(val) || null) : val;
+  if (field === 'qty' || field === 'price') updateTotals();
+}
+
+function calcTotal(row) {
+  if (row.type !== 'artigo') return null;
+  return (row.qty && row.price) ? row.qty * row.price : null;
+}
+
+function calcCapTotal(capRef) {
+  return ORCAMENTO
+    .filter(r => r.type === 'artigo' && r.ref.startsWith(capRef + '.'))
+    .reduce((s, r) => s + (calcTotal(r) || 0), 0);
+}
+
+function calcGrandTotal() {
+  return ORCAMENTO.filter(r => r.type === 'artigo').reduce((s, r) => s + (calcTotal(r) || 0), 0);
+}
+
+function updateTotals() {
+  // Update individual totals
+  ORCAMENTO.forEach(row => {
+    const el = document.getElementById('edtot_' + row.id);
+    if (!el) return;
+    if (row.type === 'artigo') {
+      const t = calcTotal(row);
+      el.textContent = t ? t.toLocaleString('pt-PT', {minimumFractionDigits: 2}) + ' €' : '—';
+    }
+  });
+  // Update cap totals
+  ORCAMENTO.filter(r => r.type === 'capitulo').forEach(cap => {
+    const el = document.getElementById('edtot_' + cap.id);
+    if (!el) return;
+    const t = calcCapTotal(cap.ref);
+    el.textContent = t ? t.toLocaleString('pt-PT', {minimumFractionDigits: 2}) + ' €' : '—';
+  });
+  // Grand total
+  const gt = calcGrandTotal();
+  document.getElementById('grandTotal').textContent =
+    gt ? gt.toLocaleString('pt-PT', {minimumFractionDigits: 2}) + ' €' : '0,00 €';
+}
+
+function renderBudget() {
+  const tbody = document.getElementById('budgetBody');
+  let html = '';
+
+  ORCAMENTO.forEach(row => {
+    if (row.type === 'capitulo') {
+      const t = calcCapTotal(row.ref);
+      html += `<tr class="bt-row-capitulo" id="edrow_${row.id}">
+        <td><div class="bt-cell"><input class="bt-input" value="${row.ref}"
+          onchange="updateRow(${row.id},'ref',this.value)" style="width:60px"></div></td>
+        <td colspan="4"><div class="bt-cell">
+          <input class="bt-input" value="${row.desc}"
+            onchange="updateRow(${row.id},'desc',this.value)">
+        </div></td>
+        <td class="bt-cap-total" id="edtot_${row.id}">${t ? t.toLocaleString('pt-PT',{minimumFractionDigits:2})+' €' : '—'}</td>
+        <td style="padding:4px">
+          <div class="row-actions" style="flex-direction:column;gap:2px">
+            <button class="btn-row-act" onclick="editorAddAfter(${row.id},'subcap')" title="+ Sub-Cap">+S</button>
+            <button class="btn-row-act del" onclick="editorDeleteRow(${row.id})" title="Eliminar">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    } else if (row.type === 'subcap') {
+      html += `<tr class="bt-row-subcap" id="edrow_${row.id}">
+        <td><div class="bt-cell"><input class="bt-input" value="${row.ref}"
+          onchange="updateRow(${row.id},'ref',this.value)" style="width:70px"></div></td>
+        <td colspan="4"><div class="bt-cell" style="padding-left:16px">
+          <input class="bt-input" value="${row.desc}"
+            onchange="updateRow(${row.id},'desc',this.value)">
+        </div></td>
+        <td id="edtot_${row.id}"></td>
+        <td style="padding:4px">
+          <div class="row-actions" style="flex-direction:column;gap:2px">
+            <button class="btn-row-act" onclick="editorAddAfter(${row.id},'artigo')" title="+ Artigo">+A</button>
+            <button class="btn-row-act del" onclick="editorDeleteRow(${row.id})" title="Eliminar">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    } else {
+      // artigo
+      const t = calcTotal(row);
+      const isSel = edSelId === row.id;
+      html += `<tr class="bt-row-artigo${isSel?' selected':''}" id="edrow_${row.id}"
+               onclick="edSelectArtigo(${row.id})">
+        <td><div class="bt-cell bt-ref">
+          <input class="bt-input" value="${row.ref||''}" style="width:65px;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3)"
+            onchange="updateRow(${row.id},'ref',this.value)" onclick="event.stopPropagation()">
+        </div></td>
+        <td><div class="bt-cell">
+          <input class="bt-input" value="${(row.desc||'').replace(/"/g,'&quot;')}" placeholder="Descrição..."
+            onchange="updateRow(${row.id},'desc',this.value)" onclick="event.stopPropagation()">
+        </div></td>
+        <td><div class="bt-cell">
+          <input class="bt-input bt-input-num" type="number" value="${row.qty||''}" placeholder="0"
+            onchange="updateRow(${row.id},'qty',this.value);updateTotals()" onclick="event.stopPropagation()">
+        </div></td>
+        <td><div class="bt-cell">
+          <input class="bt-input" value="${row.unit||''}" placeholder="m2"
+            onchange="updateRow(${row.id},'unit',this.value)" onclick="event.stopPropagation()"
+            style="text-align:center">
+        </div></td>
+        <td><div class="bt-cell">
+          <input class="bt-input bt-input-num" type="number" value="${row.price||''}" placeholder="0.00"
+            onchange="updateRow(${row.id},'price',this.value);updateTotals()" onclick="event.stopPropagation()"
+            id="edprice_${row.id}">
+        </div></td>
+        <td class="bt-total" id="edtot_${row.id}">${t ? t.toLocaleString('pt-PT',{minimumFractionDigits:2})+' €' : '—'}</td>
+        <td style="padding:4px">
+          <div class="row-actions">
+            <button class="btn-row-act" onclick="event.stopPropagation();editorAddAfter(${row.id},'artigo')" title="+ Artigo abaixo">+</button>
+            <button class="btn-row-act del" onclick="event.stopPropagation();editorDeleteRow(${row.id})" title="Eliminar">✕</button>
+          </div>
+        </td>
+      </tr>`;
+    }
+  });
+
+  tbody.innerHTML = html;
+  updateTotals();
+}
+
+// ── EDITOR SEARCH ─────────────────────────────────────────────────
+function edSelectArtigo(id) {
+  edSelId = id;
+  const row = ORCAMENTO.find(r => r.id === id);
+  if (!row) return;
+  // Update visual selection
+  document.querySelectorAll('.bt-row-artigo').forEach(el => el.classList.remove('selected'));
+  const rowEl = document.getElementById('edrow_' + id);
+  if (rowEl) rowEl.classList.add('selected');
+  // Update right panel
+  document.getElementById('espDesc').textContent =
+    (row.desc || 'Artigo sem descrição').substring(0, 70);
+  // Auto search
+  if (edMode === 'auto') edRunSearch(row.desc || '');
+}
+
+let edSearchTimeout = null;
+function edSetMode(mode) {
+  edMode = mode;
+  document.getElementById('edTabAuto').classList.toggle('smt-active', mode === 'auto');
+  document.getElementById('edTabManual').classList.toggle('smt-active', mode === 'manual');
+  const box = document.getElementById('edSearchBox');
+  box.style.display = mode === 'manual' ? 'block' : 'none';
+  if (mode === 'auto' && edSelId !== null) {
+    const row = ORCAMENTO.find(r => r.id === edSelId);
+    if (row) edRunSearch(row.desc || '');
+  }
+  if (mode === 'manual') { box.value = ''; box.focus(); }
+}
+
+function edOnSearch(val) {
+  clearTimeout(edSearchTimeout);
+  edSearchTimeout = setTimeout(() => edRunSearch(val), 220);
+}
+
+function edRunSearch(query) {
+  if (!query.trim()) {
+    document.getElementById('espResults').innerHTML = '<div class="esp-empty">Escreve para pesquisar</div>';
+    return;
+  }
+  const results = search(query);  // reuse existing search function
+  if (!results.length) {
+    document.getElementById('espResults').innerHTML = '<div class="esp-empty">Sem resultados</div>';
+    return;
+  }
+  let html = '';
+  results.slice(0, 10).forEach(({score, item}) => {
+    const pct = Math.round(score * 100);
+    const scoreClass = pct >= 50 ? 'score-high' : pct >= 30 ? 'score-mid' : 'score-low';
+    html += `<div class="result-item" style="margin:.25rem .75rem" onclick="edApplyPrice(${item[2]}, '${item[1].replace(/'/g,"\'")}', '${item[0].substring(0,60).replace(/'/g,"\'")}')">
+      <div class="result-inner">
+        <div class="result-score ${scoreClass}">${pct}%</div>
+        <div class="result-artigo">${item[0]}</div>
+        <div class="result-footer">
+          <span class="result-source">${item[3]}</span>
+          <div class="result-right">
+            <span class="result-unit">${item[1]}</span>
+            <span class="result-price">${item[2].toFixed(2)} €</span>
+            <button class="btn-apply" onclick="event.stopPropagation();edApplyPrice(${item[2]},'${item[1].replace(/'/g,"\'")}','${item[0].substring(0,60).replace(/'/g,"\'")}')">Aplicar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('espResults').innerHTML = html;
+}
+
+function edApplyPrice(price, unit, matchedName) {
+  if (edSelId === null) return;
+  const row = ORCAMENTO.find(r => r.id === edSelId);
+  if (!row) return;
+  row.price = price;
+  if (!row.unit) row.unit = unit;
+  // Update input in table
+  const priceInput = document.getElementById('edprice_' + edSelId);
+  if (priceInput) { priceInput.value = price.toFixed(2); priceInput.dispatchEvent(new Event('change')); }
+  // Re-render just this row's total
+  updateTotals();
+  // Flash
+  const rowEl = document.getElementById('edrow_' + edSelId);
+  if (rowEl) { rowEl.style.background='var(--green-l)'; setTimeout(()=>rowEl.style.background='',400); }
+}
+
+function clearEdSearch() {
+  document.getElementById('espResults').innerHTML = '<div class="esp-empty">Selecciona um artigo para ver sugestões de preço</div>';
+  document.getElementById('espDesc').textContent = 'Clica num artigo para pesquisar na tabela de preços';
+}
+
+// ── EXPORT EDITOR EXCEL ───────────────────────────────────────────
+function exportEditorExcel() {
+  const obraName = document.getElementById('editorObraName').value || 'Novo Orçamento';
+  const wb = XLSX.utils.book_new();
+  const rows = [
+    ['WeGarden', '', '', '', '', ''],
+    [obraName, '', '', '', '', ''],
+    ['Artigo', 'Descrição', 'Quantidade', 'Unidade', 'Preço Un.', 'Preço Total'],
+  ];
+
+  ORCAMENTO.forEach(row => {
+    if (row.type === 'capitulo') {
+      rows.push([row.ref, row.desc, '', '', '', '']);
+    } else if (row.type === 'subcap') {
+      rows.push([row.ref, row.desc, '', '', '', '']);
+    } else {
+      const total = (row.qty && row.price) ? row.qty * row.price : null;
+      rows.push([row.ref, row.desc, row.qty || '', row.unit || '', row.price || '', total || '']);
+    }
+  });
+
+  // Grand total row
+  const gt = calcGrandTotal();
+  rows.push(['', 'TOTAL GERAL', '', '', '', gt || '']);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  // Set column widths
+  ws['!cols'] = [{wch:12},{wch:40},{wch:12},{wch:10},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Budget');
+
+  const fname = obraName.replace(/[/\\:*?"<>|]/g,'_') + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); } });
 </script>
 </body>
