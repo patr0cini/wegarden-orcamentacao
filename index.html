@@ -525,67 +525,6 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
   </div>
 
 
-  <!-- ══ EDITOR DE ORÇAMENTO ══════════════════════════════════════ -->
-  <div class="editor-page" id="editorPage">
-    <!-- TOP BAR -->
-    <div class="editor-top">
-      <input class="editor-obra-input" id="editorObraName" type="text"
-             placeholder="Nome da Obra..." value="Nova Obra">
-      <div class="editor-actions">
-        <button class="btn btn-sm" onclick="voltarInicio()">← Início</button>
-        <button class="btn btn-sm" onclick="editorAddCapitulo()">+ Capítulo</button>
-        <button class="btn btn-sm btn-green" onclick="exportEditorExcel()">⬇ Exportar Excel</button>
-      </div>
-    </div>
-
-    <div class="editor-body">
-      <!-- LEFT: budget table -->
-      <div class="editor-left">
-        <table class="budget-table" id="budgetTable">
-          <thead>
-            <tr>
-              <th style="width:90px">Artigo</th>
-              <th style="width:40%">Descrição</th>
-              <th style="width:90px;text-align:right">Quant.</th>
-              <th style="width:70px;text-align:right">Unid.</th>
-              <th style="width:90px;text-align:right">P.U. (€)</th>
-              <th style="width:100px;text-align:right">Total (€)</th>
-              <th style="width:60px"></th>
-            </tr>
-          </thead>
-          <tbody id="budgetBody"></tbody>
-          <tfoot>
-            <tr class="bt-footer">
-              <td colspan="5" style="padding:10px">TOTAL GERAL</td>
-              <td class="bt-grand-total" id="grandTotal">0,00 €</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <!-- RIGHT: search panel -->
-      <div class="editor-right">
-        <div class="editor-search-panel">
-          <div class="esp-header">
-            <div class="esp-title">🔍 Pesquisar preços</div>
-            <div class="esp-desc" id="espDesc">Clica num artigo para pesquisar na tabela de preços</div>
-            <div class="search-mode-tabs" style="margin-top:6px">
-              <button class="smt smt-active" id="edTabAuto" onclick="edSetMode('auto')">⚡ Automática</button>
-              <button class="smt" id="edTabManual" onclick="edSetMode('manual')">🔍 Manual</button>
-            </div>
-            <input class="search-box" id="edSearchBox" type="text"
-                   placeholder="Pesquisar na tabela de preços..."
-                   oninput="edOnSearch(this.value)"
-                   style="margin-top:8px;display:none">
-          </div>
-          <div class="esp-results" id="espResults">
-            <div class="esp-empty">Selecciona um artigo para ver sugestões de preço</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- SHAREPOINT MODAL -->
   <div class="sp-modal-overlay" id="spModal" style="display:none" onclick="if(event.target===this)closeSPModal()">
@@ -657,6 +596,68 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
   </div>
 
 </div>
+
+  <!-- ══ EDITOR DE ORÇAMENTO ══════════════════════════════════════ -->
+  <div class="editor-page" id="editorPage">
+    <!-- TOP BAR -->
+    <div class="editor-top">
+      <input class="editor-obra-input" id="editorObraName" type="text"
+             placeholder="Nome da Obra..." value="Nova Obra">
+      <div class="editor-actions">
+        <button class="btn btn-sm" onclick="voltarInicio()">← Início</button>
+        <button class="btn btn-sm" onclick="editorAddCapitulo()">+ Capítulo</button>
+        <button class="btn btn-sm btn-green" onclick="exportEditorExcel()">⬇ Exportar Excel</button>
+      </div>
+    </div>
+
+    <div class="editor-body">
+      <!-- LEFT: budget table -->
+      <div class="editor-left">
+        <table class="budget-table" id="budgetTable">
+          <thead>
+            <tr>
+              <th style="width:90px">Artigo</th>
+              <th style="width:40%">Descrição</th>
+              <th style="width:90px;text-align:right">Quant.</th>
+              <th style="width:70px;text-align:right">Unid.</th>
+              <th style="width:90px;text-align:right">P.U. (€)</th>
+              <th style="width:100px;text-align:right">Total (€)</th>
+              <th style="width:60px"></th>
+            </tr>
+          </thead>
+          <tbody id="budgetBody"></tbody>
+          <tfoot>
+            <tr class="bt-footer">
+              <td colspan="5" style="padding:10px">TOTAL GERAL</td>
+              <td class="bt-grand-total" id="grandTotal">0,00 €</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- RIGHT: search panel -->
+      <div class="editor-right">
+        <div class="editor-search-panel">
+          <div class="esp-header">
+            <div class="esp-title">🔍 Pesquisar preços</div>
+            <div class="esp-desc" id="espDesc">Clica num artigo para pesquisar na tabela de preços</div>
+            <div class="search-mode-tabs" style="margin-top:6px">
+              <button class="smt smt-active" id="edTabAuto" onclick="edSetMode('auto')">⚡ Automática</button>
+              <button class="smt" id="edTabManual" onclick="edSetMode('manual')">🔍 Manual</button>
+            </div>
+            <input class="search-box" id="edSearchBox" type="text"
+                   placeholder="Pesquisar na tabela de preços..."
+                   oninput="edOnSearch(this.value)"
+                   style="margin-top:8px;display:none">
+          </div>
+          <div class="esp-results" id="espResults">
+            <div class="esp-empty">Selecciona um artigo para ver sugestões de preço</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <!-- UPLOAD SCREEN -->
 <div id="uploadScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 52px);background:var(--bg);gap:1.5rem;padding:2rem">
@@ -1103,6 +1104,7 @@ function checkReady() {
 
 function startApp() {
   document.getElementById('uploadScreen').style.display='none';
+  document.getElementById('editorPage').classList.remove('active');
   document.getElementById('mainApp').style.display='grid';
   // Use embedded DB; user can override with their own file
   if (!PRICE_DB.length) PRICE_DB = EMBEDDED_PRICE_DB;
@@ -1799,7 +1801,7 @@ let edMode    = 'auto';
 
 function abrirEditorOrcamento() {
   document.getElementById('uploadScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'none';
+  // mainApp stays hidden - editor is separate
   document.getElementById('editorPage').classList.add('active');
   if (ORCAMENTO.length === 0) initOrcamento();
   renderBudget();
@@ -1808,6 +1810,7 @@ function abrirEditorOrcamento() {
 function voltarInicio() {
   document.getElementById('editorPage').classList.remove('active');
   document.getElementById('uploadScreen').style.display = 'flex';
+  document.getElementById('mainApp').style.display = 'none';
 }
 
 function initOrcamento() {
