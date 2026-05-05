@@ -1198,9 +1198,22 @@ function showSPStep(n) {
 }
 
 function connectSharePoint() {
-  // Save current modal state and redirect to OAuth
-  sessionStorage.setItem('sp_modal_open', '1');
-  window.location.href = '/auth/sharepoint';
+  // Open OAuth in a popup — keeps the main page (and all work) intact
+  const w = 600, he = 700;
+  const left = (screen.width  - w) / 2;
+  const top  = (screen.height - he) / 2;
+  const popup = window.open(
+    '/auth/sharepoint',
+    'sp_login',
+    `width=${w},height=${he},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+  );
+  // Poll until popup closes
+  const timer = setInterval(() => {
+    if (!popup || popup.closed) {
+      clearInterval(timer);
+      checkSPConnection(); // re-check if login succeeded
+    }
+  }, 500);
 }
 
 async function disconnectSP() {
@@ -1351,11 +1364,18 @@ function showSPStatus(msg, type) {
   el.style.display = 'block';
 }
 
-// Auto-open SP modal after OAuth redirect
+// If this page is the OAuth popup callback, close it
+// (the popup was opened by connectSharePoint, so we just close it)
 if (new URLSearchParams(window.location.search).get('sp') === 'connected') {
+  // We're in the popup — close it, the main window will detect via polling
   window.addEventListener('load', () => {
-    history.replaceState({}, '', '/');
-    openSPModal();
+    if (window.opener) {
+      window.close();
+    } else {
+      // Opened directly (not as popup) — redirect to home and re-open SP modal
+      history.replaceState({}, '', '/');
+      openSPModal();
+    }
   });
 }
 

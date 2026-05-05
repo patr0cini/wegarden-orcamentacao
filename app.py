@@ -127,7 +127,20 @@ def auth_callback():
     session['sp_access_token']  = tokens.get('access_token')
     session['sp_refresh_token'] = tokens.get('refresh_token')
 
-    return redirect('/?sp=connected')
+    # Return a page that closes the popup and signals success to the parent window
+    return '''<!DOCTYPE html>
+<html><head><title>A ligar...</title></head>
+<body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f0ede6">
+<div style="text-align:center;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.1)">
+  <div style="font-size:2rem;margin-bottom:1rem">✅</div>
+  <div style="font-size:15px;font-weight:600;color:#1e3a28">Conta Microsoft ligada!</div>
+  <div style="font-size:13px;color:#6b8f74;margin-top:6px">Esta janela vai fechar automaticamente...</div>
+</div>
+<script>
+  // Close popup — parent window detects closure and calls checkSPConnection()
+  setTimeout(() => { window.close(); }, 1200);
+</script>
+</body></html>'''
 
 @app.route('/auth/sp-status')
 def sp_status():
