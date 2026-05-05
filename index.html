@@ -1801,8 +1801,9 @@ let edMode    = 'auto';
 
 function abrirEditorOrcamento() {
   document.getElementById('uploadScreen').style.display = 'none';
-  // mainApp stays hidden - editor is separate
   document.getElementById('editorPage').classList.add('active');
+  // Ensure price DB is loaded (same as startApp does)
+  if (!PRICE_DB.length) { PRICE_DB = EMBEDDED_PRICE_DB; buildIDF(); }
   if (ORCAMENTO.length === 0) initOrcamento();
   renderBudget();
 }
