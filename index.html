@@ -399,22 +399,55 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 
   <!-- SHAREPOINT MODAL -->
   <div class="sp-modal-overlay" id="spModal" style="display:none" onclick="if(event.target===this)closeSPModal()">
-    <div class="sp-modal-box">
+    <div class="sp-modal-box" style="max-width:520px">
       <div class="sp-modal-header">
         <div class="sp-modal-title">☁ Guardar no SharePoint</div>
         <button class="btn-close" onclick="closeSPModal()" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)">✕</button>
       </div>
       <div class="sp-modal-body">
-        <label class="sp-label">URL do site SharePoint</label>
-        <input class="sp-input" id="spSiteUrl" type="url" placeholder="https://empresa.sharepoint.com/sites/NomeSite">
-        <label class="sp-label">Pasta de destino</label>
-        <input class="sp-input" id="spFolder" type="text" placeholder="Documentos/Orçamentos/2026">
-        <div class="sp-note">
-          ℹ️ O upload é feito com a tua conta Microsoft — o browser vai pedir autorização na primeira vez.<br>
-          A pasta deve existir no SharePoint. Usa "/" para separar sub-pastas.
+
+        <!-- Step 1: Connect -->
+        <div id="spStep1">
+          <div class="sp-note" style="margin-bottom:1rem">
+            ℹ️ Liga a tua conta Microsoft para fazer upload directamente para o SharePoint. Só precisas de autorizar uma vez.
+          </div>
+          <button class="btn-sp-primary" onclick="connectSharePoint()">
+            <span style="font-size:16px;margin-right:6px">🔐</span> Ligar conta Microsoft
+          </button>
         </div>
-        <div class="sp-status" id="spStatus"></div>
-        <button class="btn-sp-primary" id="btnSPUpload" onclick="uploadToSharePoint()">Gerar Excel e carregar no SharePoint</button>
+
+        <!-- Step 2: Pick site + library + folder -->
+        <div id="spStep2" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding:8px 10px;background:var(--green-xl);border-radius:8px;border:1px solid var(--green-l)">
+            <span style="color:var(--green);font-size:13px">✓ Conta Microsoft ligada</span>
+            <button onclick="disconnectSP()" style="margin-left:auto;font-size:11px;color:var(--ink3);background:none;border:none;cursor:pointer">Desligar</button>
+          </div>
+
+          <label class="sp-label">Site SharePoint</label>
+          <select class="sp-input" id="spSiteSelect" onchange="onSiteChange(this.value)" style="cursor:pointer">
+            <option value="">A carregar sites...</option>
+          </select>
+
+          <label class="sp-label" id="spDriveLabel" style="display:none">Biblioteca de documentos</label>
+          <select class="sp-input" id="spDriveSelect" onchange="onDriveChange(this.value)" style="display:none;cursor:pointer">
+            <option value="">Selecciona uma biblioteca...</option>
+          </select>
+
+          <label class="sp-label" id="spFolderLabel" style="display:none">Pasta de destino</label>
+          <div id="spFolderBreadcrumb" style="display:none;font-size:11px;color:var(--ink3);margin-bottom:4px;font-family:var(--font-mono)"></div>
+          <select class="sp-input" id="spFolderSelect" onchange="onFolderChange(this.value)" style="display:none;cursor:pointer">
+            <option value="root">📁 Raiz da biblioteca</option>
+          </select>
+          <div id="spFolderPath" style="display:none">
+            <div style="font-size:11px;color:var(--ink3);margin-bottom:6px">Pasta actual: <span id="spCurrentPath" style="font-weight:600;color:var(--ink)">—</span></div>
+          </div>
+
+          <div class="sp-status" id="spStatus"></div>
+          <button class="btn-sp-primary" id="btnSPUpload" onclick="uploadToSP()" style="margin-top:.5rem">
+            ☁ Carregar Excel preenchido no SharePoint
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1131,79 +1164,178 @@ function flashFeedback() {
 }
 
 // ─── SHAREPOINT UPLOAD ───────────────────────────────────────────
+let spDriveId   = null;
+let spFolderId  = 'root';
+let spFolderName = '';
+let spFolderStack = []; // breadcrumb stack [{id, name}]
+
 function openSPModal() {
   document.getElementById('spModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   document.getElementById('spStatus').style.display = 'none';
+  checkSPConnection();
 }
+
 function closeSPModal() {
   document.getElementById('spModal').style.display = 'none';
   document.body.style.overflow = '';
 }
 
-async function uploadToSharePoint() {
-  const siteUrl = document.getElementById('spSiteUrl').value.trim().replace(/\/$/, '');
-  const folder  = document.getElementById('spFolder').value.trim().replace(/^\//, '').replace(/\/$/, '');
+async function checkSPConnection() {
+  const resp = await fetch('/auth/sp-status');
+  const data = await resp.json();
+  if (data.connected) {
+    showSPStep(2);
+    loadSPSites();
+  } else {
+    showSPStep(1);
+  }
+}
 
-  if (!siteUrl) { showSPStatus('Introduz o URL do site SharePoint.', 'err'); return; }
-  if (!folder)  { showSPStatus('Introduz a pasta de destino.', 'err'); return; }
+function showSPStep(n) {
+  document.getElementById('spStep1').style.display = n===1 ? 'block' : 'none';
+  document.getElementById('spStep2').style.display = n===2 ? 'block' : 'none';
+}
+
+function connectSharePoint() {
+  // Save current modal state and redirect to OAuth
+  sessionStorage.setItem('sp_modal_open', '1');
+  window.location.href = '/auth/sharepoint';
+}
+
+async function disconnectSP() {
+  await fetch('/auth/sp-logout');
+  showSPStep(1);
+  spDriveId = null; spFolderId = 'root'; spFolderStack = [];
+}
+
+async function loadSPSites() {
+  const sel = document.getElementById('spSiteSelect');
+  sel.innerHTML = '<option>A carregar sites...</option>';
+  try {
+    const resp = await fetch('/api/sp-sites');
+    const data = await resp.json();
+    if (data.error) { showSPStatus('Erro: ' + data.error, 'err'); return; }
+    sel.innerHTML = '<option value="">-- Selecciona um site --</option>' +
+      data.sites.map(s => `<option value="${s.id}">${s.name} (${s.url.split('/').slice(-2).join('/')})</option>`).join('');
+  } catch(e) {
+    showSPStatus('Erro ao carregar sites: ' + e.message, 'err');
+  }
+}
+
+async function onSiteChange(siteId) {
+  if (!siteId) return;
+  // Reset drive/folder
+  spDriveId = null; spFolderId = 'root'; spFolderStack = [];
+  ['spDriveLabel','spDriveSelect','spFolderLabel','spFolderSelect','spFolderPath'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  const driveEl = document.getElementById('spDriveSelect');
+  driveEl.innerHTML = '<option>A carregar bibliotecas...</option>';
+  document.getElementById('spDriveLabel').style.display = 'block';
+  driveEl.style.display = 'block';
+
+  const resp = await fetch('/api/sp-drives?site_id=' + encodeURIComponent(siteId));
+  const data = await resp.json();
+  if (data.error) { showSPStatus('Erro: ' + data.error, 'err'); return; }
+  driveEl.innerHTML = '<option value="">-- Selecciona uma biblioteca --</option>' +
+    data.drives.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+async function onDriveChange(driveId) {
+  if (!driveId) return;
+  spDriveId = driveId;
+  spFolderId = 'root';
+  spFolderStack = [];
+  document.getElementById('spFolderLabel').style.display = 'block';
+  document.getElementById('spFolderSelect').style.display = 'block';
+  document.getElementById('spFolderPath').style.display = 'block';
+  updateFolderBreadcrumb();
+  await loadFolders('root');
+}
+
+async function loadFolders(parentId) {
+  const sel = document.getElementById('spFolderSelect');
+  sel.innerHTML = '<option>A carregar pastas...</option>';
+  const resp = await fetch(`/api/sp-folders?drive_id=${spDriveId}&folder_id=${parentId}`);
+  const data = await resp.json();
+  if (data.error) { showSPStatus('Erro: ' + data.error, 'err'); return; }
+
+  let opts = '';
+  if (spFolderStack.length > 0) {
+    opts += `<option value="__up__">⬆ Voltar para pasta anterior</option>`;
+  }
+  opts += `<option value="__current__">📂 Usar esta pasta</option>`;
+  opts += data.folders.map(f => `<option value="${f.id}|${f.name}">📁 ${f.name}</option>`).join('');
+  sel.innerHTML = opts;
+}
+
+async function onFolderChange(val) {
+  if (!val) return;
+  if (val === '__current__') {
+    // Stay in current folder — nothing to do
+    document.getElementById('spFolderSelect').value = '__current__';
+    return;
+  }
+  if (val === '__up__') {
+    // Go up one level
+    const prev = spFolderStack.pop();
+    spFolderId = prev ? prev.id : 'root';
+    spFolderName = prev ? prev.name : '';
+    updateFolderBreadcrumb();
+    await loadFolders(spFolderId);
+    return;
+  }
+  // Navigate into selected folder
+  const [folderId, folderName] = val.split('|');
+  spFolderStack.push({id: spFolderId, name: spFolderName || 'Raiz'});
+  spFolderId = folderId;
+  spFolderName = folderName;
+  updateFolderBreadcrumb();
+  await loadFolders(spFolderId);
+}
+
+function updateFolderBreadcrumb() {
+  const crumb = ['Raiz', ...spFolderStack.map(f=>f.name)];
+  if (spFolderName) crumb.push(spFolderName);
+  document.getElementById('spCurrentPath').textContent = crumb.join(' / ');
+}
+
+async function uploadToSP() {
+  if (!spDriveId) { showSPStatus('Selecciona uma biblioteca e pasta.', 'err'); return; }
   if (!ORIGINAL_WB) { showSPStatus('Carrega primeiro o mapa de quantidades.', 'err'); return; }
 
   const btn = document.getElementById('btnSPUpload');
   btn.disabled = true;
-  showSPStatus('⏳ A gerar o Excel preenchido...', 'loading');
+  showSPStatus('⏳ A gerar e carregar ficheiro...', 'loading');
 
   try {
-    // 1. Get filled Excel from our server
     const rawBytes = window.ORIGINAL_FILE_BYTES instanceof ArrayBuffer
       ? window.ORIGINAL_FILE_BYTES : window.ORIGINAL_FILE_BYTES.buffer;
     const uint8 = new Uint8Array(rawBytes);
     let binary = ''; for (let i=0;i<uint8.length;i++) binary+=String.fromCharCode(uint8[i]);
 
     const payload = {
-      filename: ORIGINAL_FNAME,
+      filename:  ORIGINAL_FNAME,
       file_base64: btoa(binary),
+      drive_id:  spDriveId,
+      folder_id: spFolderId,
       prices: ITEMS.filter(i=>i.price>0).map(it=>({
-        sheet:it.sheet, row:it.rowIndex+1, priceCol:it.priceCol,
-        totalCol:it.totalCol, price:it.price,
+        sheet:it.sheet, row:it.rowIndex+1,
+        priceCol:it.priceCol, totalCol:it.totalCol, price:it.price,
         total:it.qty>0?parseFloat((it.qty*it.price).toFixed(2)):null
       }))
     };
 
-    const resp = await fetch('/api/fill-excel', {
+    const resp = await fetch('/api/sp-upload', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     });
-    if (!resp.ok) throw new Error('Erro ao gerar Excel: ' + await resp.text());
-    const excelBlob = await resp.blob();
+    const result = await resp.json();
 
-    showSPStatus('⏳ A carregar no SharePoint...', 'loading');
+    if (!resp.ok || result.error) throw new Error(result.error || 'Erro desconhecido');
 
-    // 2. Upload to SharePoint using fetch + bearer token via MSAL
-    // Use SharePoint REST API: PUT file to folder
-    const fname = ORIGINAL_FNAME.replace(/\.xlsx?$/i,'') + '_preenchido.xlsx';
-    const uploadUrl = `${siteUrl}/_api/web/GetFolderByServerRelativeUrl('${folder}')/Files/add(url='${fname}',overwrite=true)`;
-
-    // Get access token via SharePoint implicit flow
-    showSPStatus('⏳ A autenticar com Microsoft...', 'loading');
-    const token = await getSPToken(siteUrl);
-
-    const uploadResp = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json;odata=verbose',
-        'Content-Type': 'application/octet-stream',
-        'X-RequestDigest': await getSPDigest(siteUrl, token)
-      },
-      body: excelBlob
-    });
-
-    if (!uploadResp.ok) {
-      const errText = await uploadResp.text();
-      throw new Error('Erro SharePoint: ' + errText.substring(0,200));
-    }
-
-    showSPStatus(`✓ Ficheiro carregado com sucesso em ${folder}/${fname}`, 'ok');
+    const link = result.url ? `<a href="${result.url}" target="_blank" style="color:#0078d4;font-weight:600">${result.name}</a>` : result.name;
+    showSPStatus(`✓ Ficheiro carregado com sucesso: ${link}`, 'ok');
 
   } catch(e) {
     showSPStatus('✗ ' + e.message, 'err');
@@ -1212,40 +1344,19 @@ async function uploadToSharePoint() {
   }
 }
 
-async function getSPToken(siteUrl) {
-  // Use Microsoft Identity / MSAL popup flow
-  // Requires the site admin to register an app or use delegated permissions
-  // For simplicity, we use the SharePoint cookie-based auth (same-origin won't work cross-domain)
-  // Redirect approach: open SP login popup
-  return new Promise((resolve, reject) => {
-    const domain = new URL(siteUrl).origin;
-    const tokenUrl = `${domain}/_layouts/15/OAuthImplicit.aspx?client_id=&redirect_uri=${encodeURIComponent(window.location.origin)}&scope=Web.Write`;
-    // Fallback: ask user to paste token (for MVP)
-    const token = prompt(
-      'Para autenticar com o SharePoint:\n\n' +
-      '1. Abre: ' + siteUrl + '/_layouts/15/appprincipals.aspx\n' +
-      '2. Ou usa o token Bearer da sessão SharePoint actual.\n\n' +
-      'Cola aqui o token de acesso (ou cancela para usar download local):'
-    );
-    if (token) resolve(token.trim());
-    else reject(new Error('Autenticação cancelada — usa o botão "⬇ Exportar Excel" para download local.'));
-  });
-}
-
-async function getSPDigest(siteUrl, token) {
-  const resp = await fetch(siteUrl + '/_api/contextinfo', {
-    method: 'POST',
-    headers: {'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose'}
-  });
-  const data = await resp.json();
-  return data.d?.GetContextWebInformation?.FormDigestValue || '';
-}
-
 function showSPStatus(msg, type) {
   const el = document.getElementById('spStatus');
-  el.textContent = msg;
+  el.innerHTML = msg;
   el.className = 'sp-status ' + type;
   el.style.display = 'block';
+}
+
+// Auto-open SP modal after OAuth redirect
+if (new URLSearchParams(window.location.search).get('sp') === 'connected') {
+  window.addEventListener('load', () => {
+    history.replaceState({}, '', '/');
+    openSPModal();
+  });
 }
 
 // ─── PREVIEW ─────────────────────────────────────────────────────
