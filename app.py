@@ -287,41 +287,53 @@ def generate_editor_excel(obra_name, rows_data):
     ws_tpl = wb_tpl.active
     wb     = openpyxl.load_workbook(io.BytesIO(base64.b64decode(TEMPLATE_B64)))
     ws     = wb.active
-    ws['B2'] = obra_name
+    ws["B2"] = obra_name
 
     def cp_style(src, dst):
-        dst.font = copy(src.font); dst.fill = copy(src.fill)
-        dst.alignment = copy(src.alignment); dst.border = copy(src.border)
+        dst.font = copy(src.font)
+        dst.fill = copy(src.fill)
+        dst.alignment = copy(src.alignment)
+        dst.border = copy(src.border)
 
     ROW_CAP, ROW_SUB, ROW_ART = 4, 5, 6
     excel_row = 4
 
     for row in rows_data:
-        tpl_row = ROW_CAP if row['type']=='capitulo' else ROW_SUB if row['type']=='subcap' else ROW_ART
+        tpl_row = ROW_CAP if row["type"] == "capitulo" else ROW_SUB if row["type"] == "subcap" else ROW_ART
         for col in range(1, 7):
             cp_style(ws_tpl.cell(row=tpl_row, column=col), ws.cell(row=excel_row, column=col))
             ws.cell(row=excel_row, column=col).value = None
-        ws.cell(row=excel_row, column=1).value = row.get('ref','')
-        ws.cell(row=excel_row, column=2).value = row.get('desc','')
-        if row['type'] == 'artigo':
-            if row.get('qty'):   ws.cell(row=excel_row, column=3).value = row['qty']
-            if row.get('unit'):  ws.cell(row=excel_row, column=4).value = row['unit']
-            if row.get('price'): ws.cell(row=excel_row, column=5).value = row['price']
-            if row.get('qty') and row.get('price'):
-                ws.cell(row=excel_row, column=6).value = f'=C{excel_row}*E{excel_row}'.replace('{excel_row}', str(excel_row))
+        ws.cell(row=excel_row, column=1).value = row.get("ref", "")
+        ws.cell(row=excel_row, column=2).value = row.get("desc", "")
+        if row["type"] == "artigo":
+            if row.get("qty"):   ws.cell(row=excel_row, column=3).value = row["qty"]
+            if row.get("unit"):  ws.cell(row=excel_row, column=4).value = row["unit"]
+            if row.get("price"): ws.cell(row=excel_row, column=5).value = row["price"]
+            if row.get("qty") and row.get("price"):
+                r = excel_row
+                ws.cell(row=r, column=6).value = "=C" + str(r) + "*E" + str(r)
+        ws.row_dimensions[excel_row].height = 30
         excel_row += 1
 
-    # Total row
-    ws.cell(row=excel_row, column=2).value = 'TOTAL GERAL'
-    last_data_row = excel_row - 1
-    ws.cell(row=excel_row, column=6).value = f'=SUM(F4:F{last_data_row})'
-    for col in range(1, 7):
-        cp_style(ws_tpl.cell(row=3, column=col), ws.cell(row=excel_row, column=col))
-    # Clear leftover template rows
-    for r in range(excel_row+1, 25):
-        for c in range(1, 7): ws.cell(row=r, column=c).value = None
+    # Clear any leftover template rows
+    for r in range(excel_row, excel_row + 20):
+        for c in range(1, 7):
+            ws.cell(row=r, column=c).value = None
 
-    out = io.BytesIO(); wb.save(out); return out.getvalue()
+    # Total row immediately after last data row
+    last_data = excel_row - 1
+    total_row = excel_row
+    for col in range(1, 7):
+        cp_style(ws_tpl.cell(row=3, column=col), ws.cell(row=total_row, column=col))
+        ws.cell(row=total_row, column=col).value = None
+    ws.cell(row=total_row, column=2).value = "TOTAL GERAL"
+    ws.cell(row=total_row, column=6).value = "=SUM(F4:F" + str(last_data) + ")"
+    ws.row_dimensions[total_row].height = 30
+
+    out = io.BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
 
 @app.route('/api/export-editor', methods=['POST'])
 def export_editor():
