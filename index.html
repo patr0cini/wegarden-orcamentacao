@@ -2333,7 +2333,7 @@ function closeHistory() {
   document.body.style.overflow = '';
 }
 
-async async function loadHistory() {
+async function loadHistory() {
   const body = document.getElementById('historyBody');
   body.innerHTML = '<div class="hp-empty">A carregar...</div>';
   try {
@@ -2366,7 +2366,7 @@ async async function loadHistory() {
   }
 }
 
-async async function loadOrcamento(id) {
+async function loadOrcamento(id) {
   try {
     const resp = await fetch('/api/orcamentos/' + id);
     const data = await resp.json();
@@ -2389,7 +2389,7 @@ async async function loadOrcamento(id) {
   } catch(e) { alert('Erro ao carregar orçamento.'); }
 }
 
-async async function duplicateOrcamento(id) {
+async function duplicateOrcamento(id) {
   const resp = await fetch('/api/orcamentos/' + id);
   const data = await resp.json();
   const resp2 = await fetch('/api/orcamentos', {
@@ -2400,7 +2400,7 @@ async async function duplicateOrcamento(id) {
   await loadHistory();
 }
 
-async async function deleteOrcamento(id, nome) {
+async function deleteOrcamento(id, nome) {
   if (!confirm(`Eliminar "${nome}"? Esta acção não pode ser desfeita.`)) return;
   await fetch('/api/orcamentos/' + id, {method: 'DELETE'});
   if (currentOcId === id) { currentOcId = null; localStorage.removeItem('wg_current_draft'); }
