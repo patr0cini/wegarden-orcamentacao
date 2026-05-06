@@ -186,6 +186,26 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .search-box.manual-mode{border-color:var(--green3);background:var(--white)}
 
 /* ── PREVIEW MODAL ── */
+.sp-file-browser{max-width:580px}
+.sfb-path{font-size:11px;color:#0078d4;font-family:'DM Mono',monospace;margin-bottom:10px;
+  background:#f0f6ff;padding:5px 10px;border-radius:6px;word-break:break-all}
+.sfb-list{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+.sfb-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;
+  border-bottom:1px solid #f0f0f0;transition:background .12s;font-size:13px}
+.sfb-item:last-child{border-bottom:none}
+.sfb-item:hover{background:#f0f6ff}
+.sfb-item.selected{background:#e8f0fe;font-weight:500}
+.sfb-item.file:hover{background:var(--green-xl)}
+.sfb-item.file.selected{background:var(--green-l)}
+.sfb-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center}
+.sfb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfb-meta{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;flex-shrink:0}
+.sfb-back{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;
+  color:#0078d4;cursor:pointer;border-bottom:1px solid var(--border);background:#f8fbff}
+.sfb-back:hover{background:#e8f0fe}
+.sfb-empty{padding:2rem;text-align:center;color:var(--ink3);font-size:13px}
+.sfb-loading{padding:1.5rem;text-align:center;color:var(--ink3);font-size:13px}
+
 .sp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
 .sp-modal-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:480px;
@@ -333,6 +353,26 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .username-badge:hover{opacity:1}
 
 /* ── SCROLLBAR ── *//* ── PREVIEW MODAL ── */
+.sp-file-browser{max-width:580px}
+.sfb-path{font-size:11px;color:#0078d4;font-family:'DM Mono',monospace;margin-bottom:10px;
+  background:#f0f6ff;padding:5px 10px;border-radius:6px;word-break:break-all}
+.sfb-list{max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+.sfb-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;
+  border-bottom:1px solid #f0f0f0;transition:background .12s;font-size:13px}
+.sfb-item:last-child{border-bottom:none}
+.sfb-item:hover{background:#f0f6ff}
+.sfb-item.selected{background:#e8f0fe;font-weight:500}
+.sfb-item.file:hover{background:var(--green-xl)}
+.sfb-item.file.selected{background:var(--green-l)}
+.sfb-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center}
+.sfb-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sfb-meta{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;flex-shrink:0}
+.sfb-back{display:flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;
+  color:#0078d4;cursor:pointer;border-bottom:1px solid var(--border);background:#f8fbff}
+.sfb-back:hover{background:#e8f0fe}
+.sfb-empty{padding:2rem;text-align:center;color:var(--ink3);font-size:13px}
+.sfb-loading{padding:1.5rem;text-align:center;color:var(--ink3);font-size:13px}
+
 .sp-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(2px)}
 .sp-modal-box{background:#fff;border-radius:var(--r-lg);width:100%;max-width:480px;
@@ -624,6 +664,58 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
     </div>
   </div>
 
+  <!-- SP FILE BROWSER MODAL -->
+  <div class="sp-modal-overlay" id="spFileBrowserOverlay" style="display:none" onclick="if(event.target===this)closeSPFileBrowser()">
+    <div class="sp-modal-box sp-file-browser">
+      <div class="sp-modal-header">
+        <div class="sp-modal-title">☁ Abrir ficheiro do SharePoint</div>
+        <button class="btn-close" onclick="closeSPFileBrowser()" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)">✕</button>
+      </div>
+      <div class="sp-modal-body">
+
+        <!-- Step 1: Connect -->
+        <div id="sfbStep1">
+          <div class="sp-note" style="margin-bottom:1rem">Liga a tua conta Microsoft para aceder aos ficheiros do SharePoint.</div>
+          <button class="btn-sp-primary" onclick="connectSPForBrowser()">🔐 Ligar conta Microsoft</button>
+        </div>
+
+        <!-- Step 2: Browse -->
+        <div id="sfbStep2" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding:7px 10px;background:var(--green-xl);border-radius:8px;border:1px solid var(--green-l)">
+            <span style="color:var(--green);font-size:12px">✓ Conta Microsoft ligada</span>
+          </div>
+
+          <label class="sp-label">Site SharePoint</label>
+          <select class="sp-input" id="sfbSiteSelect" onchange="sfbOnSiteChange(this.value)">
+            <option value="">A carregar sites...</option>
+          </select>
+
+          <div id="sfbDriveRow" style="display:none">
+            <label class="sp-label">Biblioteca</label>
+            <select class="sp-input" id="sfbDriveSelect" onchange="sfbOnDriveChange(this.value)">
+              <option value="">Selecciona uma biblioteca...</option>
+            </select>
+          </div>
+
+          <div id="sfbBrowserRow" style="display:none">
+            <label class="sp-label">Ficheiros</label>
+            <div class="sfb-path" id="sfbPath">Raiz</div>
+            <div class="sfb-list" id="sfbList">
+              <div class="sfb-loading">⏳ A carregar...</div>
+            </div>
+          </div>
+
+          <div class="sp-status" id="sfbStatus" style="display:none;margin-top:10px"></div>
+          <button class="btn-sp-primary" id="btnSFBOpen" onclick="sfbOpenSelected()"
+                  style="margin-top:1rem;display:none">
+            ☁ Abrir ficheiro seleccionado
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- SHAREPOINT MODAL -->
   <div class="sp-modal-overlay" id="spModal" style="display:none" onclick="if(event.target===this)closeSPModal()">
     <div class="sp-modal-box" style="max-width:520px">
@@ -782,6 +874,17 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       <div class="uc-sub">Começa a partir do modelo We Garden — adiciona capítulos, sub-capítulos e artigos</div>
     </div>
 
+  </div>
+
+  <!-- SECOND ROW: SharePoint option -->
+  <div style="display:flex;gap:1rem;max-width:700px;width:100%">
+    <div class="upload-card" id="ucSP" onclick="openSPFileBrowser()" style="flex:1;display:flex;flex-direction:row;align-items:center;gap:14px;padding:1.25rem 1.5rem;text-align:left">
+      <div style="font-size:1.75rem;flex-shrink:0">☁</div>
+      <div>
+        <div class="uc-title" style="margin-bottom:2px">Abrir do SharePoint</div>
+        <div class="uc-sub">Navega, abre e guarda directamente no SharePoint</div>
+      </div>
+    </div>
   </div>
 
   <!-- Tabela de preços: actualizar subtilmente no header -->
@@ -1465,6 +1568,14 @@ function openSPModal() {
   document.getElementById('spModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   document.getElementById('spStatus').style.display = 'none';
+  // If file was opened from SharePoint, pre-fill the save location
+  if (window.SP_FILE_LOCATION) {
+    spDriveId  = window.SP_FILE_LOCATION.drive_id;
+    spFolderId = window.SP_FILE_LOCATION.parent_id;
+    spFolderName = '';
+    spFolderStack = [];
+    updateFolderBreadcrumb();
+  }
   checkSPConnection();
 }
 
@@ -2437,7 +2548,245 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 600);
 });
 
-document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); } });
+
+// ══ SHAREPOINT FILE BROWSER ══════════════════════════════════════
+let sfbDriveId   = null;
+let sfbFolderId  = 'root';
+let sfbFolderStack = []; // [{id, name}]
+let sfbSelectedFile = null; // {id, name, drive_id, parent_id}
+
+function openSPFileBrowser() {
+  document.getElementById('spFileBrowserOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.getElementById('sfbStatus').style.display = 'none';
+  sfbCheckConnection();
+}
+
+function closeSPFileBrowser() {
+  document.getElementById('spFileBrowserOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+async function sfbCheckConnection() {
+  const resp = await fetch('/auth/sp-status');
+  const data = await resp.json();
+  if (data.connected) {
+    sfbShowStep(2);
+    sfbLoadSites();
+  } else {
+    sfbShowStep(1);
+  }
+}
+
+function sfbShowStep(n) {
+  document.getElementById('sfbStep1').style.display = n===1 ? 'block' : 'none';
+  document.getElementById('sfbStep2').style.display = n===2 ? 'block' : 'none';
+}
+
+function connectSPForBrowser() {
+  const w = 600, he = 700;
+  const left = (screen.width-w)/2, top = (screen.height-he)/2;
+  const popup = window.open('/auth/sharepoint', 'sp_login',
+    `width=${w},height=${he},left=${left},top=${top},toolbar=no,menubar=no`);
+  if (!popup) { alert('Popup bloqueado. Autoriza popups para este site.'); return; }
+
+  document.getElementById('sfbStep1').innerHTML =
+    '<div style="text-align:center;padding:1.5rem;color:var(--ink3);font-size:13px">⏳ A aguardar login...</div>';
+
+  function onMsg(evt) {
+    if (evt.data && evt.data.type === 'SP_AUTH_OK') {
+      window.removeEventListener('message', onMsg);
+      fetch('/auth/sp-token', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token: evt.data.token})})
+      .then(r=>r.json()).then(d => {
+        if (d.ok) { sfbShowStep(2); sfbLoadSites(); }
+      });
+    }
+  }
+  window.addEventListener('message', onMsg);
+  const timer = setInterval(() => {
+    if (popup.closed) {
+      clearInterval(timer);
+      setTimeout(() => {
+        window.removeEventListener('message', onMsg);
+        fetch('/auth/sp-status').then(r=>r.json()).then(d => {
+          if (d.connected) { sfbShowStep(2); sfbLoadSites(); }
+          else {
+            document.getElementById('sfbStep1').innerHTML =
+              '<div class="sp-note" style="margin-bottom:1rem">Liga a tua conta Microsoft.</div>' +
+              '<button class="btn-sp-primary" onclick="connectSPForBrowser()">🔐 Ligar conta Microsoft</button>';
+          }
+        });
+      }, 500);
+    }
+  }, 500);
+}
+
+async function sfbLoadSites() {
+  const sel = document.getElementById('sfbSiteSelect');
+  sel.innerHTML = '<option>A carregar sites...</option>';
+  try {
+    const resp = await fetch('/api/sp-sites');
+    const data = await resp.json();
+    if (data.error) { sel.innerHTML = '<option>Erro ao carregar</option>'; return; }
+    sel.innerHTML = '<option value="">-- Selecciona um site --</option>' +
+      data.sites.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  } catch(e) { sel.innerHTML = '<option>Erro de ligação</option>'; }
+}
+
+async function sfbOnSiteChange(siteId) {
+  if (!siteId) return;
+  sfbDriveId = null; sfbFolderId = 'root'; sfbFolderStack = []; sfbSelectedFile = null;
+  document.getElementById('sfbDriveRow').style.display = 'none';
+  document.getElementById('sfbBrowserRow').style.display = 'none';
+  document.getElementById('btnSFBOpen').style.display = 'none';
+
+  const driveEl = document.getElementById('sfbDriveSelect');
+  document.getElementById('sfbDriveRow').style.display = 'block';
+  driveEl.innerHTML = '<option>A carregar bibliotecas...</option>';
+
+  const resp = await fetch('/api/sp-drives?site_id=' + encodeURIComponent(siteId));
+  const data = await resp.json();
+  if (data.error) { driveEl.innerHTML = '<option>Erro</option>'; return; }
+  driveEl.innerHTML = '<option value="">-- Selecciona uma biblioteca --</option>' +
+    data.drives.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+}
+
+async function sfbOnDriveChange(driveId) {
+  if (!driveId) return;
+  sfbDriveId = driveId; sfbFolderId = 'root'; sfbFolderStack = [];
+  sfbSelectedFile = null;
+  document.getElementById('sfbBrowserRow').style.display = 'block';
+  document.getElementById('btnSFBOpen').style.display = 'none';
+  sfbUpdatePath();
+  await sfbLoadFiles('root');
+}
+
+function sfbUpdatePath() {
+  const parts = ['Raiz', ...sfbFolderStack.map(f=>f.name)];
+  document.getElementById('sfbPath').textContent = parts.join(' / ');
+}
+
+async function sfbLoadFiles(folderId) {
+  const list = document.getElementById('sfbList');
+  list.innerHTML = '<div class="sfb-loading">⏳ A carregar...</div>';
+  try {
+    const resp = await fetch(`/api/sp-files?drive_id=${encodeURIComponent(sfbDriveId)}&folder_id=${encodeURIComponent(folderId)}`);
+    const data = await resp.json();
+    if (data.error) { list.innerHTML = `<div class="sfb-empty">Erro: ${data.error}</div>`; return; }
+    if (!data.items.length) { list.innerHTML = '<div class="sfb-empty">Pasta vazia — sem ficheiros Excel aqui</div>'; return; }
+
+    let html = '';
+    if (sfbFolderStack.length > 0) {
+      html += `<div class="sfb-back" onclick="sfbGoUp()">⬆ Voltar</div>`;
+    }
+    data.items.forEach(item => {
+      const icon  = item.type === 'folder' ? '📁' : '📊';
+      const size  = item.type === 'file' ? ` · ${Math.round(item.size/1024)}KB` : '';
+      const date  = item.modified ? new Date(item.modified).toLocaleDateString('pt-PT') : '';
+      html += `<div class="sfb-item ${item.type}" onclick="sfbClickItem('${item.id}','${item.name.replace(/'/g,"\'")}','${item.type}')">
+        <div class="sfb-icon">${icon}</div>
+        <div class="sfb-name" title="${item.name}">${item.name}</div>
+        <div class="sfb-meta">${date}${size}</div>
+      </div>`;
+    });
+    list.innerHTML = html;
+  } catch(e) {
+    list.innerHTML = `<div class="sfb-empty">Erro: ${e.message}</div>`;
+  }
+}
+
+function sfbClickItem(id, name, type) {
+  if (type === 'folder') {
+    sfbFolderStack.push({id: sfbFolderId, name: name});
+    sfbFolderId = id;
+    sfbUpdatePath();
+    sfbSelectedFile = null;
+    document.getElementById('btnSFBOpen').style.display = 'none';
+    sfbLoadFiles(id);
+  } else {
+    // Select file
+    sfbSelectedFile = {id, name, drive_id: sfbDriveId};
+    // Highlight
+    document.querySelectorAll('.sfb-item').forEach(el => el.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+    document.getElementById('btnSFBOpen').style.display = 'block';
+    document.getElementById('btnSFBOpen').textContent = `☁ Abrir "${name}"`;
+  }
+}
+
+async function sfbGoUp() {
+  const prev = sfbFolderStack.pop();
+  sfbFolderId = prev ? prev.id : 'root';
+  sfbUpdatePath();
+  sfbSelectedFile = null;
+  document.getElementById('btnSFBOpen').style.display = 'none';
+  await sfbLoadFiles(sfbFolderId);
+}
+
+async function sfbOpenSelected() {
+  if (!sfbSelectedFile) return;
+  const btn = document.getElementById('btnSFBOpen');
+  btn.disabled = true; btn.textContent = '⏳ A descarregar...';
+  const st = document.getElementById('sfbStatus');
+  st.style.display = 'block'; st.className = 'sp-status loading';
+  st.textContent = 'A descarregar ficheiro do SharePoint...';
+
+  try {
+    const resp = await fetch(`/api/sp-download?drive_id=${encodeURIComponent(sfbSelectedFile.drive_id)}&file_id=${encodeURIComponent(sfbSelectedFile.id)}`);
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    // Decode base64 to ArrayBuffer
+    const binary = atob(data.file_base64);
+    const bytes  = new Uint8Array(binary.length);
+    for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const buffer = bytes.buffer;
+
+    // Load into XLSX and parse
+    const wb = XLSX.read(buffer, {type:'array'});
+    window.ORIGINAL_FILE_BYTES = buffer;
+
+    // Store SharePoint location for saving back
+    window.SP_FILE_LOCATION = {
+      drive_id:  data.drive_id,
+      file_id:   data.file_id,
+      parent_id: data.parent_id,
+      filename:  data.filename
+    };
+
+    parseMapa(wb, data.filename);
+    closeSPFileBrowser();
+
+    // Start app
+    document.getElementById('uploadScreen').style.display = 'none';
+    document.getElementById('editorPage').classList.remove('active');
+    document.getElementById('mainApp').style.display = 'grid';
+    if (!PRICE_DB.length) { PRICE_DB = EMBEDDED_PRICE_DB; buildIDF(); }
+    renderList();
+
+    // Show "Guardar no SP" indicator
+    if (document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display = 'block';
+    if (document.getElementById('btnSP')) {
+      document.getElementById('btnSP').style.display = 'block';
+      document.getElementById('btnSP').textContent = '☁ Guardar no SharePoint';
+      document.getElementById('btnSP').style.background = '#0078d4';
+      document.getElementById('btnSP').style.color = '#fff';
+    }
+    checkReady();
+    document.getElementById('ucMapaOk').style.display = 'block';
+    document.getElementById('ucMapaOk').textContent = `✓ ${data.filename} (SharePoint)`;
+
+  } catch(e) {
+    st.className = 'sp-status err';
+    st.textContent = '✗ ' + e.message;
+    btn.disabled = false;
+    btn.textContent = '☁ Abrir ficheiro seleccionado';
+  }
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); closeSPFileBrowser(); } });
 
 </script>
 </body>

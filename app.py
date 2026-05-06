@@ -352,6 +352,73 @@ def delete_orcamento(oc_id):
     db.session.commit()
     return jsonify({'ok': True})
 
+# ── SHAREPOINT FILE BROWSER ──────────────────────────────────────
+@app.route('/api/sp-files')
+def sp_files():
+    """List Excel files in a SharePoint folder."""
+    if not authed() or not session.get('sp_access_token'):
+        return jsonify({'error': 'not_authenticated'}), 401
+    drive_id  = (request.args.get('drive_id') or '').strip()
+    folder_id = (request.args.get('folder_id') or 'root').strip()
+    if not drive_id:
+        return jsonify({'error': 'missing drive_id'}), 400
+    try:
+        path = f'/drives/{urllib.parse.quote(drive_id, safe="")}/items/{urllib.parse.quote(folder_id, safe="")}/children?$select=id,name,file,folder,size,lastModifiedDateTime'
+        data = graph_get(path)
+        items = []
+        for i in data.get('value', []):
+            is_folder = 'folder' in i
+            is_excel  = not is_folder and i.get('name','').lower().endswith(('.xlsx','.xls'))
+            if is_folder or is_excel:
+                items.append({
+                    'id':       i['id'],
+                    'name':     i['name'],
+                    'type':     'folder' if is_folder else 'file',
+                    'size':     i.get('size', 0),
+                    'modified': i.get('lastModifiedDateTime', '')
+                })
+        # Sort: folders first, then files
+        items.sort(key=lambda x: (0 if x['type']=='folder' else 1, x['name'].lower()))
+        return jsonify({'items': items, 'folder_id': folder_id})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sp-download')
+def sp_download():
+    """Download an Excel file from SharePoint and return as base64."""
+    if not authed() or not session.get('sp_access_token'):
+        return jsonify({'error': 'not_authenticated'}), 401
+    drive_id = (request.args.get('drive_id') or '').strip()
+    file_id  = (request.args.get('file_id')  or '').strip()
+    if not drive_id or not file_id:
+        return jsonify({'error': 'missing parameters'}), 400
+    try:
+        token = session['sp_access_token']
+        # Get file metadata first (name)
+        meta_url = f'https://graph.microsoft.com/v1.0/drives/{urllib.parse.quote(drive_id, safe="")}/items/{urllib.parse.quote(file_id, safe="")}'
+        req = urllib.request.Request(meta_url.encode('ascii','ignore').decode(),
+            headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'})
+        with urllib.request.urlopen(req) as resp:
+            meta = json.loads(resp.read())
+        filename = meta.get('name', 'ficheiro.xlsx')
+
+        # Download file content
+        dl_url = f'https://graph.microsoft.com/v1.0/drives/{urllib.parse.quote(drive_id, safe="")}/items/{urllib.parse.quote(file_id, safe="")}/content'
+        req2 = urllib.request.Request(dl_url.encode('ascii','ignore').decode(),
+            headers={'Authorization': 'Bearer ' + token})
+        with urllib.request.urlopen(req2) as resp2:
+            file_bytes = resp2.read()
+
+        return jsonify({
+            'filename':    filename,
+            'file_base64': base64.b64encode(file_bytes).decode('ascii'),
+            'drive_id':    drive_id,
+            'file_id':     file_id,
+            'parent_id':   meta.get('parentReference', {}).get('id', 'root')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/debug')
 def debug():
     return json.dumps({'BASE_DIR':BASE_DIR,'STATIC_DIR':STATIC_DIR,
