@@ -592,6 +592,49 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       </div>
     </div>
   </div>
+<!-- SP FILE BROWSER MODAL -->
+<div class="sp-modal-overlay" id="spFileBrowserOverlay" style="display:none" onclick="if(event.target===this)closeSPFileBrowser()">
+  <div class="sp-modal-box sp-file-browser">
+    <div class="sp-modal-header">
+      <div class="sp-modal-title">☁ Abrir ficheiro do SharePoint</div>
+      <button class="btn-close" onclick="closeSPFileBrowser()" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)">✕</button>
+    </div>
+    <div class="sp-modal-body">
+      <div id="sfbStep1">
+        <div class="sp-note" style="margin-bottom:1rem">Liga a tua conta Microsoft para aceder aos ficheiros do SharePoint.</div>
+        <button class="btn-sp-primary" onclick="connectSPForBrowser()">🔐 Ligar conta Microsoft</button>
+      </div>
+      <div id="sfbStep2" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding:7px 10px;background:var(--green-xl);border-radius:8px;border:1px solid var(--green-l)">
+          <span style="color:var(--green);font-size:12px">✓ Conta Microsoft ligada</span>
+        </div>
+        <label class="sp-label">Site SharePoint</label>
+        <select class="sp-input" id="sfbSiteSelect" onchange="sfbOnSiteChange(this.value)">
+          <option value="">A carregar sites...</option>
+        </select>
+        <div id="sfbDriveRow" style="display:none">
+          <label class="sp-label">Biblioteca</label>
+          <select class="sp-input" id="sfbDriveSelect" onchange="sfbOnDriveChange(this.value)">
+            <option value="">Selecciona uma biblioteca...</option>
+          </select>
+        </div>
+        <div id="sfbBrowserRow" style="display:none">
+          <label class="sp-label">Ficheiros</label>
+          <div class="sfb-path" id="sfbPath">Raiz</div>
+          <div class="sfb-list" id="sfbList">
+            <div class="sfb-loading">⏳ A carregar...</div>
+          </div>
+        </div>
+        <div class="sp-status" id="sfbStatus" style="display:none;margin-top:10px"></div>
+        <button class="btn-sp-primary" id="btnSFBOpen" onclick="sfbOpenSelected()" style="margin-top:1rem;display:none">
+          ☁ Abrir ficheiro seleccionado
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
   <!-- RIGHT: search panel -->
   <div class="right">
@@ -660,58 +703,6 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       </div>
       <div class="hp-footer">
         <button class="btn btn-green" style="width:100%" onclick="saveCurrentToServer()">💾 Guardar orçamento actual</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SP FILE BROWSER MODAL -->
-  <div class="sp-modal-overlay" id="spFileBrowserOverlay" style="display:none" onclick="if(event.target===this)closeSPFileBrowser()">
-    <div class="sp-modal-box sp-file-browser">
-      <div class="sp-modal-header">
-        <div class="sp-modal-title">☁ Abrir ficheiro do SharePoint</div>
-        <button class="btn-close" onclick="closeSPFileBrowser()" style="background:rgba(255,255,255,.2);color:#fff;border-color:rgba(255,255,255,.3)">✕</button>
-      </div>
-      <div class="sp-modal-body">
-
-        <!-- Step 1: Connect -->
-        <div id="sfbStep1">
-          <div class="sp-note" style="margin-bottom:1rem">Liga a tua conta Microsoft para aceder aos ficheiros do SharePoint.</div>
-          <button class="btn-sp-primary" onclick="connectSPForBrowser()">🔐 Ligar conta Microsoft</button>
-        </div>
-
-        <!-- Step 2: Browse -->
-        <div id="sfbStep2" style="display:none">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding:7px 10px;background:var(--green-xl);border-radius:8px;border:1px solid var(--green-l)">
-            <span style="color:var(--green);font-size:12px">✓ Conta Microsoft ligada</span>
-          </div>
-
-          <label class="sp-label">Site SharePoint</label>
-          <select class="sp-input" id="sfbSiteSelect" onchange="sfbOnSiteChange(this.value)">
-            <option value="">A carregar sites...</option>
-          </select>
-
-          <div id="sfbDriveRow" style="display:none">
-            <label class="sp-label">Biblioteca</label>
-            <select class="sp-input" id="sfbDriveSelect" onchange="sfbOnDriveChange(this.value)">
-              <option value="">Selecciona uma biblioteca...</option>
-            </select>
-          </div>
-
-          <div id="sfbBrowserRow" style="display:none">
-            <label class="sp-label">Ficheiros</label>
-            <div class="sfb-path" id="sfbPath">Raiz</div>
-            <div class="sfb-list" id="sfbList">
-              <div class="sfb-loading">⏳ A carregar...</div>
-            </div>
-          </div>
-
-          <div class="sp-status" id="sfbStatus" style="display:none;margin-top:10px"></div>
-          <button class="btn-sp-primary" id="btnSFBOpen" onclick="sfbOpenSelected()"
-                  style="margin-top:1rem;display:none">
-            ☁ Abrir ficheiro seleccionado
-          </button>
-        </div>
-
       </div>
     </div>
   </div>
@@ -848,6 +839,9 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       </div>
     </div>
   </div>
+
+  <!-- SP FILE BROWSER MODAL -->  </div>
+
 
 <!-- UPLOAD SCREEN -->
 <div id="uploadScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100vh - 52px);background:var(--bg);gap:1.5rem;padding:2rem">
@@ -2710,7 +2704,8 @@ function sfbClickItem(id, name, type) {
     sfbSelectedFile = {id, name, drive_id: sfbDriveId};
     // Highlight
     document.querySelectorAll('.sfb-item').forEach(el => el.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    const selEl = document.querySelector(`.sfb-item[data-id="${id}"]`);
+    if (selEl) selEl.classList.add('selected');
     document.getElementById('btnSFBOpen').style.display = 'block';
     document.getElementById('btnSFBOpen').textContent = `☁ Abrir "${name}"`;
   }
