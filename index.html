@@ -737,8 +737,6 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
     </div>
   </div>
 
-</div>
-
   <!-- ══ EDITOR DE ORÇAMENTO ══════════════════════════════════════ -->
   <div class="editor-page" id="editorPage">
     <!-- TOP BAR -->
@@ -852,41 +850,7 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       </div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:700px;width:100%">
-
-    <!-- MAPA -->
-    <div class="upload-card" id="ucMapa" onclick="document.getElementById('fiMapa').click()">
-      <input type="file" id="fiMapa" accept=".xlsx,.xls" style="display:none" onchange="loadMapa(event)">
-      <div class="uc-icon">📊</div>
-      <div class="uc-title">Mapa de quantidades</div>
-      <div class="uc-sub">Ficheiro Excel do cliente com os artigos a orçamentar</div>
-      <div class="uc-success" id="ucMapaOk" style="display:none"></div>
-    </div>
-
-    <!-- NOVO ORÇAMENTO -->
-    <div class="upload-card" id="ucNovo" onclick="abrirEditorOrcamento()">
-      <div class="uc-icon">✏️</div>
-      <div class="uc-title">Criar novo orçamento</div>
-      <div class="uc-sub">Começa a partir do modelo We Garden — adiciona capítulos, sub-capítulos e artigos</div>
-    </div>
-
-  </div>
-
-  <!-- SECOND ROW: SharePoint option -->
-  <div style="display:flex;gap:1rem;max-width:700px;width:100%">
-    <div class="upload-card" id="ucSP" onclick="openSPFileBrowser()" style="flex:1;display:flex;flex-direction:row;align-items:center;gap:14px;padding:1.25rem 1.5rem;text-align:left">
-      <div style="font-size:1.75rem;flex-shrink:0">☁</div>
-      <div>
-        <div class="uc-title" style="margin-bottom:2px">Abrir do SharePoint</div>
-        <div class="uc-sub">Navega, abre e guarda directamente no SharePoint</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabela de preços: actualizar subtilmente no header -->
-  <input type="file" id="fiTabela" accept=".xlsx,.xls" style="display:none" onchange="loadTabela(event)">
-  <div id="uploadStatus" style="font-size:13px;color:var(--ink3)">Escolhe uma opção para começar</div>
-  <button class="btn btn-green" id="btnStart" style="display:none;padding:10px 28px;font-size:14px" onclick="startApp()">Iniciar →</button>
+</div>
 </div>
 
 <script>
