@@ -608,6 +608,22 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 
 
 
+  <!-- HISTORY PANEL -->
+  <div class="history-overlay" id="historyOverlay" style="display:none" onclick="if(event.target===this)closeHistory()">
+    <div class="history-panel">
+      <div class="hp-header">
+        <div class="hp-title">📋 Orçamentos guardados</div>
+        <button onclick="closeHistory()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px">✕</button>
+      </div>
+      <div class="hp-body" id="historyBody">
+        <div class="hp-empty">A carregar...</div>
+      </div>
+      <div class="hp-footer">
+        <button class="btn btn-green" style="width:100%" onclick="saveCurrentToServer()">💾 Guardar orçamento actual</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SHAREPOINT MODAL -->
   <div class="sp-modal-overlay" id="spModal" style="display:none" onclick="if(event.target===this)closeSPModal()">
     <div class="sp-modal-box" style="max-width:520px">
@@ -2422,23 +2438,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('keydown', e => { if(e.key==='Escape'){ closePreview(); closeSPModal(); } });
-
-
-  <!-- HISTORY PANEL -->
-  <div class="history-overlay" id="historyOverlay" style="display:none" onclick="if(event.target===this)closeHistory()">
-    <div class="history-panel">
-      <div class="hp-header">
-        <div class="hp-title">📋 Orçamentos guardados</div>
-        <button onclick="closeHistory()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:15px">✕</button>
-      </div>
-      <div class="hp-body" id="historyBody">
-        <div class="hp-empty">A carregar...</div>
-      </div>
-      <div class="hp-footer">
-        <button class="btn btn-green" style="width:100%" onclick="saveCurrentToServer()">💾 Guardar orçamento actual</button>
-      </div>
-    </div>
-  </div>
 
 </script>
 </body>
