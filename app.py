@@ -14,8 +14,11 @@ APP_PASSWORD        = os.environ.get('APP_PASSWORD', 'wegarden2026')
 
 # Database — uses SQLite locally, PostgreSQL on Render (set DATABASE_URL env var)
 db_url = os.environ.get('DATABASE_URL', 'sqlite:///orcamentos.db')
-if db_url.startswith('postgres://'):  # Render uses postgres://, SQLAlchemy needs postgresql://
-    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+# Convert postgres:// to postgresql+psycopg:// for psycopg3 + Python 3.14 compatibility
+if db_url.startswith('postgres://'):
+    db_url = db_url.replace('postgres://', 'postgresql+psycopg://', 1)
+elif db_url.startswith('postgresql://'):
+    db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
