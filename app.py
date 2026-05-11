@@ -197,13 +197,18 @@ def sp_logout():
 
 def graph_get(path):
     token = session.get('sp_access_token','')
-    # Replace any control characters in the URL
     url = 'https://graph.microsoft.com/v1.0' + path
     url = url.encode('ascii', 'ignore').decode('ascii')
     req = urllib.request.Request(url,
         headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/json'})
-    with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        if e.code == 401:
+            session.pop('sp_access_token', None)  # clear expired token
+            raise Exception('token_expired')
+        raise
 
 @app.route('/api/sp-sites')
 def sp_sites():
