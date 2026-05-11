@@ -212,8 +212,16 @@ def sp_sites():
         data = graph_get('/sites?search=*')
         sites = [{'id':s['id'],'name':s.get('displayName',''),'url':s.get('webUrl','')}
                  for s in data.get('value',[])]
-        return jsonify({'sites': sites})
-    except Exception as e: return jsonify({'error':str(e)}),500
+    except Exception:
+        sites = []
+    # Fallback: if search returned nothing, use the root site
+    if not sites:
+        try:
+            root = graph_get('/sites/root')
+            sites = [{'id': root['id'], 'name': root.get('displayName', 'WeGarden'), 'url': root.get('webUrl', '')}]
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    return jsonify({'sites': sites})
 
 @app.route('/api/sp-root-site')
 def sp_root_site():
