@@ -421,6 +421,79 @@ def sp_download():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+# ── TABELA DE PREÇOS (SharePoint híbrido) ────────────────────────
+import unicodedata, re as _re, time
+
+SP_TABELA_DRIVE = "b!XczKRVeAvkqvVHY3J2cJoLHu5rU0QhBPlvhytjKfq6c54mUls8pzQ6dLhnpiuMp1"
+SP_TABELA_FILE  = "01A4FV2OHIIFYFXXVO6VCZUMUUGZNRQ7MQ"
+_tabela_cache   = None   # {data: [...], ts: float}
+
+def _norm(s):
+    s = str(s).lower()
+    s = unicodedata.normalize('NFD', s)
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+    return _re.sub(r'\s+', ' ', _re.sub(r'[^a-z0-9]', ' ', s)).strip()
+
+def _process_tabela(file_bytes):
+    """Parse all 5 sheets and return deduplicated price list."""
+    wb  = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
+    items = []
+    for sheet in wb.sheetnames:
+        ws = wb[sheet]
+        is_fallback = (sheet == 'Preços de Venda')
+        for row in ws.iter_rows(values_only=True):
+            if not row or len(row) < 4: continue
+            artigo  = str(row[1]).strip() if row[1] not in (None,'') else ''
+            unidade = str(row[2]).strip() if row[2] not in (None,'') else ''
+            try:    preco = float(row[3])
+            except: continue
+            if not artigo or not unidade or preco <= 0: continue
+            if artigo in ('Artigo','Motor de Busca','Preços de Custo Diaplant',
+                          'Preços de Custo Aquamatic','Preços de Tabela Planta Livre',
+                          'Preços de Custo Pannebaker'): continue
+            items.append([artigo, unidade, round(preco,2), sheet, is_fallback])
+    # Deduplicate
+    deduped = {}
+    for it in items:
+        key = _norm(it[0])
+        if key not in deduped:
+            deduped[key] = it
+        else:
+            ex = deduped[key]
+            if ex[4] and not it[4]: deduped[key] = it
+            elif ex[4] == it[4] and it[2] < ex[2]: deduped[key] = it
+    return list(deduped.values())
+
+@app.route('/api/refresh-tabela', methods=['POST'])
+def refresh_tabela():
+    """Download fresh price table from SharePoint and cache it server-side."""
+    global _tabela_cache
+    if not authed() or not session.get('sp_access_token'):
+        return jsonify({'error': 'not_authenticated'}), 401
+    try:
+        token    = session['sp_access_token']
+        drive_id = urllib.parse.quote(SP_TABELA_DRIVE, safe='')
+        file_id  = urllib.parse.quote(SP_TABELA_FILE,  safe='')
+        dl_url   = f'https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{file_id}/content'
+        req = urllib.request.Request(dl_url.encode('ascii','ignore').decode(),
+            headers={'Authorization': 'Bearer ' + token})
+        with urllib.request.urlopen(req) as resp:
+            file_bytes = resp.read()
+        items = _process_tabela(file_bytes)
+        _tabela_cache = {'data': items, 'ts': time.time(), 'count': len(items)}
+        return jsonify({'ok': True, 'count': len(items), 'ts': _tabela_cache['ts']})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get-tabela', methods=['GET'])
+def get_tabela():
+    """Return cached price table (no auth needed — just reading cached data)."""
+    if _tabela_cache:
+        return jsonify({'ok': True, 'data': _tabela_cache['data'],
+                         'count': _tabela_cache['count'], 'ts': _tabela_cache['ts']})
+    return jsonify({'ok': False, 'data': None})
+
 @app.route('/debug')
 def debug():
     return json.dumps({'BASE_DIR':BASE_DIR,'STATIC_DIR':STATIC_DIR,
