@@ -1,4 +1,4 @@
-import base64, io, os, json, secrets
+import base64, io, os, json, secrets, re, unicodedata, time
 from flask import Flask, request, send_file, session, redirect, send_from_directory, jsonify
 import openpyxl
 import urllib.request, urllib.parse
@@ -215,6 +215,15 @@ def sp_sites():
         return jsonify({'sites': sites})
     except Exception as e: return jsonify({'error':str(e)}),500
 
+@app.route('/api/sp-root-site')
+def sp_root_site():
+    if not authed() or not session.get('sp_access_token'): return jsonify({'error':'not_authenticated'}),401
+    try:
+        data = graph_get('/sites/root')
+        site = {'id': data['id'], 'name': data.get('displayName', 'Raiz'), 'url': data.get('webUrl', '')}
+        return jsonify({'sites': [site]})
+    except Exception as e: return jsonify({'error':str(e)}),500
+
 @app.route('/api/sp-drives')
 def sp_drives():
     if not authed() or not session.get('sp_access_token'): return jsonify({'error':'not_authenticated'}),401
@@ -261,7 +270,6 @@ def sp_upload():
         out = io.BytesIO(); wb.save(out); excel_bytes = out.getvalue()
 
         # Clean filename — remove special chars that break URLs
-        import re
         safe_name = re.sub(r'[\x00-\x1f,;\[\]{}|\\^`]', '_', filename.rsplit('.',1)[0]) + '_preenchido.xlsx'
         token = session['sp_access_token']
         # Encode the filename for use in URL
@@ -423,8 +431,6 @@ def sp_download():
 
 
 # ── TABELA DE PREÇOS (SharePoint híbrido) ────────────────────────
-import unicodedata, re as _re, time
-
 SP_TABELA_DRIVE = "b!XczKRVeAvkqvVHY3J2cJoLHu5rU0QhBPlvhytjKfq6c54mUls8pzQ6dLhnpiuMp1"
 SP_TABELA_FILE  = "01A4FV2OHIIFYFXXVO6VCZUMUUGZNRQ7MQ"
 _tabela_cache   = None   # {data: [...], ts: float}
@@ -433,7 +439,7 @@ def _norm(s):
     s = str(s).lower()
     s = unicodedata.normalize('NFD', s)
     s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
-    return _re.sub(r'\s+', ' ', _re.sub(r'[^a-z0-9]', ' ', s)).strip()
+    return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9]', ' ', s)).strip()
 
 def _process_tabela(file_bytes):
     """Parse all 5 sheets and return deduplicated price list."""
@@ -567,7 +573,6 @@ def export_editor():
         obra_name = data.get('obra', 'Novo Orçamento')
         rows_data = data.get('rows', [])
         excel_bytes = generate_editor_excel(obra_name, rows_data)
-        import re
         safe_name = re.sub(r'[/\\:*?"<>|]', '_', obra_name) + '.xlsx'
         return send_file(io.BytesIO(excel_bytes),
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
