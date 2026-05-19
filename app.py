@@ -29,9 +29,17 @@ class Orcamento(db.Model):
     atualizado  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     dados       = db.Column(db.Text, nullable=False)  # JSON with rows
     utilizador  = db.Column(db.String(100), default='')
+    meta        = db.Column(db.Text, nullable=True)   # JSON with budget metadata
 
 with app.app_context():
     db.create_all()
+    # Add meta column if it doesn't exist yet (safe migration for existing DBs)
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text('ALTER TABLE orcamento ADD COLUMN meta TEXT'))
+            conn.commit()
+    except Exception:
+        pass
 AZURE_CLIENT_ID     = os.environ.get('AZURE_CLIENT_ID', '')
 AZURE_CLIENT_SECRET = os.environ.get('AZURE_CLIENT_SECRET', '')
 AZURE_TENANT_ID     = os.environ.get('AZURE_TENANT_ID', '')
@@ -325,12 +333,16 @@ def fill_excel():
 def list_orcamentos():
     if not authed(): return jsonify({'error': 'not_authenticated'}), 401
     ocs = Orcamento.query.order_by(Orcamento.atualizado.desc()).all()
+    def parse_meta(o):
+        try: return json.loads(o.meta) if o.meta else {}
+        except: return {}
     return jsonify({'orcamentos': [{
         'id': o.id, 'nome': o.nome,
         'criado_em': o.criado_em.isoformat(),
         'atualizado': o.atualizado.isoformat(),
         'utilizador': o.utilizador,
-        'n_artigos': len([r for r in json.loads(o.dados) if r.get('type') == 'artigo'])
+        'n_artigos': len([r for r in json.loads(o.dados) if r.get('type') == 'artigo']),
+        'meta': parse_meta(o)
     } for o in ocs]})
 
 @app.route('/api/orcamentos', methods=['POST'])
@@ -338,6 +350,7 @@ def save_orcamento():
     if not authed(): return jsonify({'error': 'not_authenticated'}), 401
     data = request.get_json(force=True)
     oc_id = data.get('id')
+    meta_val = json.dumps(data.get('meta', {}), ensure_ascii=False) if data.get('meta') is not None else None
     if oc_id:
         oc = db.session.get(Orcamento, oc_id)
         if oc:
@@ -345,12 +358,15 @@ def save_orcamento():
             oc.dados = json.dumps(data.get('rows', []), ensure_ascii=False)
             oc.atualizado = datetime.utcnow()
             oc.utilizador = data.get('utilizador', '')
+            if meta_val is not None:
+                oc.meta = meta_val
             db.session.commit()
             return jsonify({'id': oc.id, 'ok': True})
     oc = Orcamento(
         nome=data.get('nome', 'Sem nome'),
         dados=json.dumps(data.get('rows', []), ensure_ascii=False),
-        utilizador=data.get('utilizador', '')
+        utilizador=data.get('utilizador', ''),
+        meta=meta_val
     )
     db.session.add(oc)
     db.session.commit()
@@ -361,10 +377,13 @@ def get_orcamento(oc_id):
     if not authed(): return jsonify({'error': 'not_authenticated'}), 401
     oc = db.session.get(Orcamento, oc_id)
     if not oc: return jsonify({'error': 'not found'}), 404
+    try: meta = json.loads(oc.meta) if oc.meta else {}
+    except: meta = {}
     return jsonify({'id': oc.id, 'nome': oc.nome,
                     'rows': json.loads(oc.dados),
                     'atualizado': oc.atualizado.isoformat(),
-                    'utilizador': oc.utilizador})
+                    'utilizador': oc.utilizador,
+                    'meta': meta})
 
 @app.route('/api/orcamentos/<int:oc_id>', methods=['DELETE'])
 def delete_orcamento(oc_id):
@@ -592,6 +611,94 @@ def export_editor():
             as_attachment=True, download_name=safe_name)
     except Exception as e:
         return str(e), 500
+
+# ── AI CHAT (Anthropic Claude) ────────────────────────────────────
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+ANTHROPIC_MODEL   = os.environ.get('ANTHROPIC_MODEL', 'claude-haiku-4-5')
+
+def _build_orcamento_context(rows):
+    """Compact text representation of the budget for the model."""
+    if not rows: return ''
+    lines = []
+    for r in rows:
+        t = r.get('type', '')
+        ref = r.get('ref', '')
+        desc = r.get('desc', '')
+        if t == 'capitulo':
+            lines.append(f"\n## {ref} {desc}")
+        elif t == 'subcap':
+            lines.append(f"\n### {ref} {desc}")
+        elif t == 'artigo':
+            q = r.get('quant', '') or ''
+            u = r.get('unid', '') or ''
+            pu = r.get('pu', '') or ''
+            lines.append(f"- [{ref}] {desc} — {q} {u} × {pu}€")
+    return '\n'.join(lines).strip()
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
+    if not ANTHROPIC_API_KEY:
+        return jsonify({'error': 'ANTHROPIC_API_KEY não configurada no servidor.'}), 500
+    try:
+        data = request.get_json(force=True)
+        messages = data.get('messages', [])
+        ctx = data.get('context', {}) or {}
+        rows = ctx.get('orcamento', []) or []
+        notas = (ctx.get('notas', '') or '').strip()
+        obra = (ctx.get('obra', '') or '').strip()
+        meta = ctx.get('meta', {}) or {}
+
+        # Build system prompt
+        sys_parts = [
+            "És um assistente especializado em orçamentação de obras de jardinagem e paisagismo, a trabalhar dentro da app de orçamentação da We Garden (Portugal).",
+            "Ajudas a decompor artigos em sub-tarefas, a calcular volumes/áreas, regras de três simples, conversões de unidades e a estruturar orçamentos.",
+            "Responde sempre em Português (PT-PT), de forma directa e curta. Usa unidades métricas (m, m², m³, kg, un). Mostra os cálculos passo-a-passo quando relevante.",
+            "Quando o utilizador pede para decompor um artigo, devolve uma lista clara de sub-artigos com unidades plausíveis."
+        ]
+        if obra:
+            sys_parts.append(f"\nObra actual: {obra}")
+        meta_str = ', '.join([f"{k}: {v}" for k, v in meta.items() if v])
+        if meta_str:
+            sys_parts.append(f"Info do orçamento: {meta_str}")
+        oc_ctx = _build_orcamento_context(rows)
+        if oc_ctx:
+            sys_parts.append(f"\nOrçamento actual:\n{oc_ctx}")
+        if notas:
+            sys_parts.append(f"\nNotas do utilizador:\n{notas}")
+        system_prompt = '\n'.join(sys_parts)
+
+        # Call Anthropic Messages API
+        payload = json.dumps({
+            'model': ANTHROPIC_MODEL,
+            'max_tokens': 1024,
+            'system': system_prompt,
+            'messages': messages
+        }).encode('utf-8')
+        req = urllib.request.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=payload,
+            headers={
+                'x-api-key': ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        # Extract text
+        text = ''
+        for block in result.get('content', []):
+            if block.get('type') == 'text':
+                text += block.get('text', '')
+        return jsonify({'ok': True, 'reply': text, 'model': result.get('model', '')})
+    except urllib.error.HTTPError as e:
+        try: err_body = e.read().decode('utf-8')
+        except: err_body = str(e)
+        return jsonify({'error': f'Erro API ({e.code}): {err_body[:300]}'}), 500
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)))
