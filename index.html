@@ -359,6 +359,53 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .cm-btn.primary:hover{background:var(--green2)}
 .cm-btn.primary:disabled{opacity:.5;cursor:not-allowed}
 
+/* ── AUTO-MATCH MODAL ── */
+.am-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.am-overlay.open{display:flex}
+.am-box{background:#fff;width:90vw;max-width:760px;max-height:90vh;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
+.am-header{background:var(--green);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.am-header .am-title{font-size:15px;font-weight:600}
+.am-header .am-progress{font-size:11px;opacity:.85;margin-top:2px}
+.am-progress-bar{height:4px;background:rgba(255,255,255,.2);width:100%}
+.am-progress-fill{height:100%;background:var(--green-l);transition:width .3s ease}
+.am-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px}
+.am-close:hover{background:rgba(255,255,255,.3)}
+.am-body{flex:1;overflow-y:auto;padding:16px 20px}
+.am-section{font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.am-card{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:12px;background:var(--bg2)}
+.am-card.match{background:var(--green-xl);border-color:var(--green3)}
+.am-art-ref{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);margin-bottom:4px}
+.am-art-desc{font-size:13.5px;line-height:1.45;color:var(--ink);font-weight:500}
+.am-art-meta{font-size:11px;color:var(--ink3);margin-top:6px;display:flex;gap:12px}
+.am-art-meta span{display:inline-flex;align-items:center;gap:3px}
+.am-match-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
+.am-match-score{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.3px;padding:3px 9px;border-radius:11px;flex-shrink:0}
+.am-score-high{background:var(--green);color:#fff}
+.am-score-mid{background:var(--amber);color:#fff}
+.am-match-desc{font-size:13px;line-height:1.45;color:var(--ink);flex:1}
+.am-match-meta{font-size:11px;color:var(--ink2);margin-top:6px;display:flex;justify-content:space-between;align-items:center}
+.am-match-source{background:rgba(255,255,255,.7);padding:2px 8px;border-radius:8px;font-size:10px;color:var(--ink2)}
+.am-match-price{font-family:'DM Mono',monospace;font-weight:700;color:var(--green);font-size:14px}
+.am-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--bg);flex-shrink:0}
+.am-stats{font-size:11px;color:var(--ink3);display:flex;gap:12px}
+.am-stats b{color:var(--ink);font-weight:600}
+.am-actions{display:flex;gap:6px}
+.am-btn{padding:8px 14px;border-radius:6px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:12.5px;cursor:pointer;color:var(--ink2);font-weight:500}
+.am-btn:hover{background:var(--bg2)}
+.am-btn.stop{color:var(--red);border-color:#f5c2c2}
+.am-btn.stop:hover{background:#fde8e8}
+.am-btn.skip:hover{background:var(--bg2)}
+.am-btn.apply{background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
+.am-btn.apply:hover{background:var(--green2)}
+.am-keys{font-size:9px;color:var(--ink3);margin-top:3px;text-align:right}
+.am-summary{text-align:center;padding:1rem}
+.am-summary-icon{font-size:42px;margin-bottom:10px}
+.am-summary-title{font-size:18px;font-weight:600;color:var(--green);margin-bottom:14px}
+.am-summary-stats{display:flex;justify-content:center;gap:24px;margin:18px 0}
+.am-stat-card{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:75px}
+.am-stat-num{font-size:24px;font-weight:700;color:var(--ink);font-family:'DM Mono',monospace}
+.am-stat-label{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
 /* ── METADATA PANEL ── */
 .oc-meta-panel{border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;overflow-y:auto;max-height:55%}
 .oc-meta-toggle{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;
@@ -706,6 +753,7 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="openPreview()" id="btnPreview" style="display:none">👁 Pré-visualizar</button>
+        <button class="btn btn-sm" onclick="amStart()" id="btnAutoMatch" style="display:none;border-color:var(--amber);color:var(--amber)" title="Procura matches automáticos na tabela de preços">🎯 Match automático</button>
         <button class="btn btn-sm btn-green" onclick="exportForClaude()">⬇ Exportar Excel</button>
         <button class="btn btn-sm" onclick="openSPModal()" id="btnSP" style="display:none;border-color:#0078d4;color:#0078d4">☁ SharePoint</button>
       </div>
@@ -985,6 +1033,33 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
     </div>
   </div>
 </div><!-- end editorPage -->
+
+<!-- AUTO-MATCH MODAL -->
+<div class="am-overlay" id="amOverlay" onclick="if(event.target===this)amStop(true)">
+  <div class="am-box">
+    <div class="am-header">
+      <div>
+        <div class="am-title" id="amTitle">🎯 Match automático</div>
+        <div class="am-progress" id="amProgressLabel">A preparar...</div>
+      </div>
+      <button class="am-close" onclick="amStop(true)" title="Parar">✕</button>
+    </div>
+    <div class="am-progress-bar"><div class="am-progress-fill" id="amProgressFill" style="width:0%"></div></div>
+    <div class="am-body" id="amBody"></div>
+    <div class="am-footer" id="amFooter">
+      <div class="am-stats" id="amStats">
+        <span>✓ Aplicados: <b id="amStatApplied">0</b></span>
+        <span>↷ Saltados: <b id="amStatSkipped">0</b></span>
+        <span>⊘ Sem match: <b id="amStatNoMatch">0</b></span>
+      </div>
+      <div class="am-actions" id="amActions">
+        <button class="am-btn stop" onclick="amStop(true)" title="Parar (Esc)">⏹ Parar</button>
+        <button class="am-btn skip" onclick="amSkip()" title="Saltar (N)">✗ Saltar</button>
+        <button class="am-btn apply" id="amApplyBtn" onclick="amApply()" title="Aplicar (Y / Enter)">✓ Aplicar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- COLUMN MAPPING MODAL -->
 <div class="cm-overlay" id="cmOverlay" onclick="if(event.target===this)cmCancel()">
@@ -1494,6 +1569,7 @@ function loadMapa(e) {
         document.getElementById('ucMapaOk').textContent = `✓ ${file.name} — ${ITEMS.length} artigos`;
         if(document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display='block';
         if(document.getElementById('btnSP')) document.getElementById('btnSP').style.display='block';
+        if(document.getElementById('btnAutoMatch')) document.getElementById('btnAutoMatch').style.display='block';
         checkReady();
       });
     } catch(err) {
@@ -1722,6 +1798,208 @@ function cmConfirm() {
   const cb = st.onConfirm;
   CM_STATE = null;
   if (cb) cb();
+}
+
+// ═══ AUTO-MATCH WIZARD ═══════════════════════════════════════════
+let AM_STATE = null;
+
+function amStart() {
+  // Build queue of items that need a price: must have unit, no price yet
+  if (!ITEMS.length) { alert('Sem artigos para fazer match.'); return; }
+
+  const queue = ITEMS.filter(it => {
+    if (!it.hasUnit) return false;        // skip section headers
+    if (it.price && it.price > 0) return false;  // skip items already with a price
+    return true;
+  });
+
+  if (!queue.length) {
+    alert('Todos os artigos já têm preço atribuído. Nada a fazer.');
+    return;
+  }
+
+  AM_STATE = {
+    queue,
+    total: queue.length,
+    idx: 0,
+    applied: 0,
+    skipped: 0,
+    noMatch: 0,
+    currentMatch: null,
+    threshold: 0.70
+  };
+
+  document.getElementById('amOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', amKeyHandler);
+  amProcessNext();
+}
+
+function amKeyHandler(e) {
+  if (!AM_STATE) return;
+  if (e.key === 'Escape') { e.preventDefault(); amStop(true); }
+  else if (e.key === 'Enter' || e.key === 'y' || e.key === 'Y') {
+    const btn = document.getElementById('amApplyBtn');
+    if (btn && !btn.disabled && btn.style.display !== 'none') { e.preventDefault(); amApply(); }
+  } else if (e.key === 'n' || e.key === 'N') {
+    if (AM_STATE.currentMatch) { e.preventDefault(); amSkip(); }
+  }
+}
+
+function amProcessNext() {
+  const st = AM_STATE; if (!st) return;
+
+  // Update progress
+  const progressPct = st.total > 0 ? (st.idx / st.total) * 100 : 0;
+  document.getElementById('amProgressFill').style.width = progressPct + '%';
+  document.getElementById('amProgressLabel').textContent =
+    `Artigo ${st.idx + 1} de ${st.total}`;
+  document.getElementById('amStatApplied').textContent = st.applied;
+  document.getElementById('amStatSkipped').textContent = st.skipped;
+  document.getElementById('amStatNoMatch').textContent = st.noMatch;
+
+  // Finished?
+  if (st.idx >= st.queue.length) { amShowSummary(); return; }
+
+  const it = st.queue[st.idx];
+  const q  = it.descMatch || it.desc || '';
+
+  // Find best match using improved scorer; respect active sheet filter
+  let db = PRICE_DB;
+  if (typeof ACTIVE_SHEETS !== 'undefined' && ACTIVE_SHEETS.size < 5) {
+    db = PRICE_DB.filter(i => ACTIVE_SHEETS.has(i[3]));
+  }
+  const results = searchInDB(q, db, 3);
+  const top = results[0];
+
+  if (!top || top.score < st.threshold) {
+    // No usable match — skip silently
+    st.noMatch++;
+    st.idx++;
+    // Avoid stack overflow with many no-match items — defer next iteration
+    setTimeout(amProcessNext, 0);
+    return;
+  }
+
+  // Have a match — show to user
+  st.currentMatch = { item: it, match: top };
+  amRenderCard(it, top);
+}
+
+function amRenderCard(it, top) {
+  const pct = Math.round(top.score * 100);
+  const scoreClass = pct >= 80 ? 'am-score-high' : 'am-score-mid';
+  const itemRef = (it.ref || '').toString();
+  const itemMeta = [];
+  if (it.unit) itemMeta.push(`Un: <b>${it.unit}</b>`);
+  if (it.qty)  itemMeta.push(`Quant: <b>${it.qty}</b>`);
+  if (it.sheet) itemMeta.push(`Folha: ${it.sheet}`);
+
+  const html = `
+    <div class="am-section">Artigo do orçamento</div>
+    <div class="am-card">
+      ${itemRef ? `<div class="am-art-ref">${itemRef}</div>` : ''}
+      <div class="am-art-desc">${(it.desc || '').replace(/</g,'&lt;') || '(sem descrição)'}</div>
+      ${itemMeta.length ? `<div class="am-art-meta">${itemMeta.map(s => `<span>${s}</span>`).join('')}</div>` : ''}
+    </div>
+
+    <div class="am-section">Melhor correspondência encontrada</div>
+    <div class="am-card match">
+      <div class="am-match-row">
+        <div class="am-match-desc">${top.item[0].replace(/</g,'&lt;')}</div>
+        <span class="am-match-score ${scoreClass}">${pct}%</span>
+      </div>
+      <div class="am-match-meta">
+        <span class="am-match-source">${top.item[3]}</span>
+        <span><span style="color:var(--ink3)">${top.item[1]} · </span><span class="am-match-price">${top.item[2].toFixed(2)} €</span></span>
+      </div>
+    </div>
+    <div class="am-keys" style="margin-top:6px">Atalhos: <b>Y/Enter</b> aplicar · <b>N</b> saltar · <b>Esc</b> parar</div>
+  `;
+  document.getElementById('amBody').innerHTML = html;
+  document.getElementById('amApplyBtn').disabled = false;
+}
+
+function amApply() {
+  const st = AM_STATE; if (!st || !st.currentMatch) return;
+  const { item, match } = st.currentMatch;
+  // Apply price (mirrors applyPrice behavior — but works regardless of selection)
+  const it = ITEMS.find(i => i.id === item.id);
+  if (it) {
+    it.price = match.item[2];
+    it.matchedArticle = match.item[0].substring(0, 60);
+    if (typeof updateRowPrice === 'function') updateRowPrice(it.id);
+  }
+  st.applied++;
+  st.currentMatch = null;
+  st.idx++;
+  amProcessNext();
+}
+
+function amSkip() {
+  const st = AM_STATE; if (!st) return;
+  st.skipped++;
+  st.currentMatch = null;
+  st.idx++;
+  amProcessNext();
+}
+
+function amStop(showSummary) {
+  if (!AM_STATE) return;
+  if (showSummary && (AM_STATE.applied || AM_STATE.skipped || AM_STATE.noMatch)) {
+    amShowSummary(true);
+  } else {
+    amClose();
+  }
+}
+
+function amShowSummary(interrupted) {
+  const st = AM_STATE; if (!st) return;
+  document.getElementById('amProgressFill').style.width = '100%';
+  document.getElementById('amProgressLabel').textContent = interrupted ? 'Parado' : 'Concluído';
+
+  const html = `
+    <div class="am-summary">
+      <div class="am-summary-icon">${interrupted ? '⏹' : '🎉'}</div>
+      <div class="am-summary-title">${interrupted ? 'Match automático parado' : 'Match automático concluído'}</div>
+      <div class="am-summary-stats">
+        <div class="am-stat-card">
+          <div class="am-stat-num" style="color:var(--green)">${st.applied}</div>
+          <div class="am-stat-label">Aplicados</div>
+        </div>
+        <div class="am-stat-card">
+          <div class="am-stat-num" style="color:var(--ink2)">${st.skipped}</div>
+          <div class="am-stat-label">Saltados</div>
+        </div>
+        <div class="am-stat-card">
+          <div class="am-stat-num" style="color:var(--ink3)">${st.noMatch}</div>
+          <div class="am-stat-label">Sem match &ge;${Math.round(st.threshold*100)}%</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:10px">
+        Os artigos saltados ou sem match continuam sem preço — podes preenchê-los manualmente.
+      </div>
+    </div>
+  `;
+  document.getElementById('amBody').innerHTML = html;
+  // Replace actions with single Fechar button
+  document.getElementById('amActions').innerHTML =
+    `<button class="am-btn apply" onclick="amClose()">Fechar</button>`;
+}
+
+function amClose() {
+  document.removeEventListener('keydown', amKeyHandler);
+  document.getElementById('amOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  // Reset actions for next run
+  document.getElementById('amActions').innerHTML = `
+    <button class="am-btn stop" onclick="amStop(true)" title="Parar (Esc)">⏹ Parar</button>
+    <button class="am-btn skip" onclick="amSkip()" title="Saltar (N)">✗ Saltar</button>
+    <button class="am-btn apply" id="amApplyBtn" onclick="amApply()" title="Aplicar (Y / Enter)">✓ Aplicar</button>
+  `;
+  // Refresh list so applied prices show on screen
+  if (typeof renderList === 'function') renderList();
+  AM_STATE = null;
 }
 
 function loadTabela(e) {
@@ -3454,6 +3732,7 @@ async function sfbOpenSelected() {
       renderList();
 
       if (document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display = 'block';
+      if (document.getElementById('btnAutoMatch')) document.getElementById('btnAutoMatch').style.display = 'block';
       if (document.getElementById('btnSP')) {
         document.getElementById('btnSP').style.display = 'block';
         document.getElementById('btnSP').textContent = '☁ Guardar no SharePoint';
