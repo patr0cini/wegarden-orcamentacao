@@ -1153,33 +1153,70 @@ function searchInDB(query, db, topN=12) {
   buildIDF();
   const qk = kw(query);
   if (!qk.length) return [];
-  const qTotal = qk.reduce((s,w) => s+(IDF[w]||Math.log(PRICE_DB.length+1)),0);
-  if (!qTotal) return [];
+
+  const NlogN = Math.log(PRICE_DB.length + 1);
+  // Per-query token IDF, sorted by IDF descending (rare/discriminative words first)
+  const qPairs = qk.map(w => [w, IDF[w] || NlogN]);
+  const qByIdf = [...qPairs].sort((a, b) => b[1] - a[1]);
+
+  // Top-K rarest tokens dominate the score.
+  // This way matching the 2-3 most discriminative words (e.g. "cistus salvifolius")
+  // yields a high score even if many other generic words don't match.
+  const K = Math.min(qByIdf.length, 6);
+  const keyTokens = qByIdf.slice(0, K);
+  const keyTotalIdf  = keyTokens.reduce((s, p) => s + p[1], 0);
+  const fullTotalIdf = qPairs.reduce((s, p) => s + p[1], 0);
+  if (!keyTotalIdf && !fullTotalIdf) return [];
+
+  const qSet = new Set(qk);
+
   const scored = [];
   for (const item of db) {
-    const ck = new Set(kw(item[0]));
-    const score = qk.reduce((s,w) => s+(ck.has(w)?(IDF[w]||0):0),0) / qTotal;
-    if (score > 0.1) scored.push({score, item});
+    const itemTokens = kw(item[0]);
+    if (!itemTokens.length) continue;
+    const itemSet = new Set(itemTokens);
+
+    // 1) Key-token score (rare terms)
+    let keyMatchedIdf = 0;
+    for (const [w, idf] of keyTokens) {
+      if (itemSet.has(w)) keyMatchedIdf += idf;
+    }
+    const keyScore = keyTotalIdf > 0 ? keyMatchedIdf / keyTotalIdf : 0;
+
+    // 2) Full-query score (original normalization — safety net)
+    let fullMatchedIdf = 0;
+    for (const [w, idf] of qPairs) {
+      if (itemSet.has(w)) fullMatchedIdf += idf;
+    }
+    const fullScore = fullTotalIdf > 0 ? fullMatchedIdf / fullTotalIdf : 0;
+
+    // 3) Item-side coverage: fraction of the DB item that matched
+    let itemMatched = 0;
+    for (const t of itemTokens) if (qSet.has(t)) itemMatched++;
+    const itemCoverage = itemMatched / itemTokens.length;
+
+    // 4) Bigram bonus: consecutive query words also adjacent in the item
+    let bigramHits = 0;
+    for (let i = 0; i < qk.length - 1; i++) {
+      if (itemSet.has(qk[i]) && itemSet.has(qk[i + 1])) bigramHits++;
+    }
+    const bigramBonus = Math.min(bigramHits * 0.10, 0.25);
+
+    // Combine — take the better of key/full to avoid penalising long queries
+    let score = Math.max(keyScore, fullScore) * 0.7
+              + itemCoverage * 0.2
+              + bigramBonus;
+    if (score > 1) score = 1;
+
+    if (score > 0.12) scored.push({ score, item });
   }
-  scored.sort((a,b) => b.score - a.score);
+  scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, topN);
 }
 
 function search(query, topN=12) {
-  buildIDF();
-  const qk = kw(query);
-  if (!qk.length) return [];
-  const qTotal = qk.reduce((s,w) => s+(IDF[w]||Math.log(PRICE_DB.length+1)),0);
-  if (!qTotal) return [];
-
-  const scored = [];
-  for (const item of PRICE_DB) {
-    const ck = new Set(kw(item[0]));
-    const score = qk.reduce((s,w) => s+(ck.has(w)?(IDF[w]||0):0),0) / qTotal;
-    if (score > 0.1) scored.push({score, item});
-  }
-  scored.sort((a,b) => b.score - a.score);
-  return scored.slice(0, topN);
+  // Delegate to searchInDB so both code paths use the same improved scoring.
+  return searchInDB(query, PRICE_DB, topN);
 }
 
 // ─── PARSE PRICE TABLE ───────────────────────────────────────────
@@ -1292,8 +1329,14 @@ function parseMapa(wb, fname) {
                       rawUnit.length<=8 && norm(rawUnit)!=='nan' &&
                       !parseFloat(rawUnit) && rawUnit.length<=5 && !rawUnit.includes(' ');
 
-      const descMatch = rawDesc.length<30 && parentDesc.length>rawDesc.length
-        ? parentDesc+' '+rawDesc : rawDesc;
+      // descMatch: prefer the row's own description as primary search query.
+      // The short identifier (e.g. "Cistus salvifolius - #6/m2") is far more
+      // discriminative than the long boilerplate from the parent section.
+      // Only fall back to parent context if the row has no meaningful tokens.
+      const _rawTokens = kw(rawDesc);
+      const descMatch = _rawTokens.length > 0
+        ? rawDesc
+        : (parentDesc + ' ' + rawDesc).trim();
 
       // ALL rows go into ITEMS — with or without unit
       // hasUnit=false means it's a section header / sub-description / composite parent
