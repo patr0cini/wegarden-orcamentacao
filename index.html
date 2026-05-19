@@ -320,6 +320,45 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
 .esp-results{flex:1;overflow-y:auto;padding:.5rem 0}
 .esp-empty{padding:2rem 1rem;text-align:center;color:var(--ink3);font-size:12px}
 
+/* ── COLUMN MAPPING MODAL ── */
+.cm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.cm-overlay.open{display:flex}
+.cm-box{background:#fff;width:90vw;max-width:1100px;max-height:90vh;border-radius:10px;box-shadow:0 16px 48px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden}
+.cm-header{background:var(--green);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.cm-header .cm-title{font-size:15px;font-weight:600}
+.cm-header .cm-sub{font-size:11px;opacity:.85;margin-top:2px}
+.cm-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px}
+.cm-close:hover{background:rgba(255,255,255,.3)}
+.cm-body{flex:1;overflow-y:auto;padding:16px 20px}
+.cm-controls{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px;font-size:12px;color:var(--ink2)}
+.cm-controls label{display:flex;align-items:center;gap:6px;font-weight:500}
+.cm-controls select{border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-family:inherit;font-size:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer}
+.cm-controls select:focus{border-color:var(--green3)}
+.cm-preview-wrap{border:1px solid var(--border);border-radius:6px;overflow:auto;max-height:280px;background:var(--bg2)}
+.cm-preview{border-collapse:collapse;font-size:11px;font-family:'DM Mono',monospace;width:max-content;min-width:100%}
+.cm-preview th,.cm-preview td{border:1px solid var(--border);padding:4px 8px;text-align:left;vertical-align:top;white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.cm-preview thead th{background:#1e3a28;color:#fff;font-weight:600;position:sticky;top:0;z-index:2;font-family:inherit;font-size:11px;letter-spacing:.3px}
+.cm-preview tbody td.cm-rowidx{background:var(--bg);color:var(--ink3);text-align:right;width:36px;position:sticky;left:0;font-family:inherit;font-weight:500}
+.cm-preview tbody tr.cm-header-row td{background:#fef9e2;color:var(--ink);font-weight:700;font-family:inherit}
+.cm-preview tbody tr.cm-header-row td.cm-rowidx{background:#f5d76e}
+.cm-preview .cm-col-mapped{background:var(--green-xl) !important;border-left:2px solid var(--green3);border-right:2px solid var(--green3)}
+.cm-section{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 8px}
+.cm-mapping{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px}
+.cm-field{display:flex;flex-direction:column;gap:3px}
+.cm-field label{font-size:11px;font-weight:600;color:var(--ink2)}
+.cm-field label .req{color:var(--red);margin-left:3px}
+.cm-field select{border:1px solid var(--border);border-radius:5px;padding:6px 8px;font-family:inherit;font-size:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer}
+.cm-field select:focus{border-color:var(--green3);box-shadow:0 0 0 2px var(--green-xl)}
+.cm-field.invalid select{border-color:var(--red);background:#fde8e8}
+.cm-hint{font-size:10px;color:var(--ink3);margin-top:2px;line-height:1.3}
+.cm-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--bg);gap:12px;flex-shrink:0}
+.cm-footer .cm-warning{font-size:11px;color:var(--red);flex:1}
+.cm-btn{padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:13px;cursor:pointer;color:var(--ink2);font-weight:500}
+.cm-btn:hover{background:var(--bg2)}
+.cm-btn.primary{background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
+.cm-btn.primary:hover{background:var(--green2)}
+.cm-btn.primary:disabled{opacity:.5;cursor:not-allowed}
+
 /* ── METADATA PANEL ── */
 .oc-meta-panel{border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;overflow-y:auto;max-height:55%}
 .oc-meta-toggle{display:flex;align-items:center;justify-content:space-between;padding:.6rem 1rem;
@@ -947,6 +986,65 @@ header{background:var(--green);height:52px;display:flex;align-items:center;justi
   </div>
 </div><!-- end editorPage -->
 
+<!-- COLUMN MAPPING MODAL -->
+<div class="cm-overlay" id="cmOverlay" onclick="if(event.target===this)cmCancel()">
+  <div class="cm-box">
+    <div class="cm-header">
+      <div>
+        <div class="cm-title">📋 Confirmar colunas do ficheiro</div>
+        <div class="cm-sub" id="cmSub">A analisar...</div>
+      </div>
+      <button class="cm-close" onclick="cmCancel()" title="Cancelar">✕</button>
+    </div>
+    <div class="cm-body">
+      <div class="cm-controls">
+        <label>Folha: <select id="cmSheet" onchange="cmOnSheetChange()"></select></label>
+        <label>Linha de cabeçalho: <select id="cmHeaderRow" onchange="cmOnHeaderChange()"></select></label>
+      </div>
+
+      <div class="cm-preview-wrap">
+        <table class="cm-preview" id="cmPreview"></table>
+      </div>
+
+      <div class="cm-section">Mapeamento de colunas</div>
+      <div class="cm-mapping">
+        <div class="cm-field" id="cmFieldRef">
+          <label>Ref / Artigo (nº)</label>
+          <select id="cmColRef" onchange="cmHighlightCols()"></select>
+        </div>
+        <div class="cm-field" id="cmFieldDesc">
+          <label>Descrição <span class="req">*</span></label>
+          <select id="cmColDesc" onchange="cmHighlightCols()"></select>
+        </div>
+        <div class="cm-field" id="cmFieldUnit">
+          <label>Unidade <span class="req">*</span></label>
+          <select id="cmColUnit" onchange="cmHighlightCols()"></select>
+        </div>
+        <div class="cm-field" id="cmFieldQty">
+          <label>Quantidade <span class="req">*</span></label>
+          <select id="cmColQty" onchange="cmHighlightCols()"></select>
+        </div>
+        <div class="cm-field" id="cmFieldPrice">
+          <label>P. Unitário <span class="req">*</span></label>
+          <select id="cmColPrice" onchange="cmHighlightCols()"></select>
+        </div>
+        <div class="cm-field" id="cmFieldTotal">
+          <label>Total</label>
+          <select id="cmColTotal" onchange="cmHighlightCols()"></select>
+        </div>
+      </div>
+      <div class="cm-hint" style="margin-top:10px">
+        💡 Os campos com * são obrigatórios. As colunas seleccionadas aparecem destacadas a verde na pré-visualização acima.
+      </div>
+    </div>
+    <div class="cm-footer">
+      <div class="cm-warning" id="cmWarning"></div>
+      <button class="cm-btn" onclick="cmCancel()">Cancelar</button>
+      <button class="cm-btn primary" id="cmConfirmBtn" onclick="cmConfirm()">Confirmar e continuar ✓</button>
+    </div>
+  </div>
+</div>
+
 <!-- SP FILE BROWSER MODAL -->
 <div class="sp-modal-overlay" id="spFileBrowserOverlay" style="display:none" onclick="if(event.target===this)closeSPFileBrowser()">
   <div class="sp-modal-box sp-file-browser">
@@ -1117,6 +1215,8 @@ let ORIGINAL_FNAME = '';
 let ORIGINAL_FILE_BYTES = null;
 let searchTimeout = null;
 let compositeParentId = null;  // composite price mode
+let LAST_PARSE_OVERRIDE = null; // last user-confirmed column mapping
+let CM_STATE = null;            // column-mapping modal state
 
 // ─── NORMALISE ───────────────────────────────────────────────────
 function norm(s) {
@@ -1278,18 +1378,33 @@ function findCols(hrow) {
   return c;
 }
 
-function parseMapa(wb, fname) {
+function parseMapa(wb, fname, override) {
+  // override = { sheetName, headerRow, cols: {ref,desc,unit,qty,price,total} }
+  // If provided, skip auto-detection and process only that sheet with those columns.
   ITEMS = [];
   ORIGINAL_WB = wb;
   ORIGINAL_FNAME = fname;
+  // Save mapping so re-exports / save-back can use the same column layout
+  LAST_PARSE_OVERRIDE = override || null;
 
-  wb.SheetNames.forEach(sheet => {
+  const sheetsToProcess = override && override.sheetName
+    ? [override.sheetName]
+    : wb.SheetNames;
+
+  sheetsToProcess.forEach(sheet => {
+    if (!wb.Sheets[sheet]) return;
     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], {header:1, defval:null});
-    const hi = findHdr(rows);
-    if (hi===null) return;
-    let cols = findCols(rows[hi]);
+    let hi, cols;
+    if (override && override.sheetName === sheet) {
+      hi = override.headerRow;
+      cols = Object.assign({ref:-1,desc:-1,unit:-1,qty:-1,price:-1,total:-1}, override.cols || {});
+    } else {
+      hi = findHdr(rows);
+      if (hi===null) return;
+      cols = findCols(rows[hi]);
+    }
 
-    if (cols.unit<0) {
+    if (cols.unit<0 && !override) {
       for (let ri=hi+1; ri<Math.min(hi+15,rows.length); ri++) {
         for (let ci=0; ci<rows[ri].length; ci++) {
           if (isUnit(rows[ri][ci])) { cols.unit=ci; break; }
@@ -1297,14 +1412,14 @@ function parseMapa(wb, fname) {
         if (cols.unit>=0) break;
       }
     }
-    if (cols.unit>=0) {
+    if (cols.unit>=0 && !override) {
       if (cols.desc <0) cols.desc  = cols.unit-1;
       if (cols.qty  <0) cols.qty   = cols.unit+1;
       if (cols.price<0) cols.price = cols.qty+1;
       if (cols.total<0) cols.total = cols.price+1;
     }
-    if (cols.ref<0 && cols.desc>0) cols.ref = cols.desc-1;
-    if (cols.ref>=0 && cols.desc>=0 && cols.desc-cols.ref>1) cols.ref = cols.desc-1;
+    if (cols.ref<0 && cols.desc>0 && !override) cols.ref = cols.desc-1;
+    if (cols.ref>=0 && cols.desc>=0 && cols.desc-cols.ref>1 && !override) cols.ref = cols.desc-1;
 
     let parentDesc = '';
     rows.slice(hi+1).forEach((row, off) => {
@@ -1368,23 +1483,245 @@ function loadMapa(e) {
   r.onload = ev => {
     try {
       const wb = XLSX.read(ev.target.result, {type:'array'});
-      // Save raw bytes so we can send the original file untouched to the server
       ORIGINAL_FILE_BYTES = ev.target.result;
-      parseMapa(wb, file.name);
-      mapaReady = true;
-      const uc = document.getElementById('ucMapa');
-      uc.classList.add('loaded');
-      uc.onclick = null;
-      document.getElementById('ucMapaOk').style.display='block';
-      document.getElementById('ucMapaOk').textContent = `✓ ${file.name} — ${ITEMS.length} artigos`;
-      if(document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display='block';
-      if(document.getElementById('btnSP')) document.getElementById('btnSP').style.display='block';
-      checkReady();
+      // Open column-mapping modal; parsing happens after user confirms.
+      cmOpen(wb, file.name, () => {
+        mapaReady = true;
+        const uc = document.getElementById('ucMapa');
+        uc.classList.add('loaded');
+        uc.onclick = null;
+        document.getElementById('ucMapaOk').style.display='block';
+        document.getElementById('ucMapaOk').textContent = `✓ ${file.name} — ${ITEMS.length} artigos`;
+        if(document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display='block';
+        if(document.getElementById('btnSP')) document.getElementById('btnSP').style.display='block';
+        checkReady();
+      });
     } catch(err) {
       alert('Erro ao ler mapa: '+err.message);
     }
   };
   r.readAsArrayBuffer(file);
+}
+
+// ═══ COLUMN MAPPING MODAL ════════════════════════════════════════
+function _colLetter(n) {
+  let s = ''; n = n + 1;
+  while (n > 0) { const r = (n - 1) % 26; s = String.fromCharCode(65 + r) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+
+function cmOpen(wb, fname, onConfirm) {
+  const sheets = wb.SheetNames.map(name => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null });
+    const hi = findHdr(rows);
+    return { name, rows, hi };
+  }).filter(s => s.rows.length > 0);
+
+  if (!sheets.length) { alert('O ficheiro não tem dados.'); return; }
+
+  let defaultIdx = sheets.findIndex(s => s.hi !== null);
+  if (defaultIdx < 0) defaultIdx = 0;
+
+  CM_STATE = { wb, fname, sheets, currentSheetIdx: defaultIdx, onConfirm };
+
+  const sheetSel = document.getElementById('cmSheet');
+  sheetSel.innerHTML = sheets.map((s, i) =>
+    `<option value="${i}"${i === defaultIdx ? ' selected' : ''}>${s.name}${s.hi === null ? ' (sem cabeçalho detectado)' : ''}</option>`
+  ).join('');
+
+  document.getElementById('cmSub').textContent =
+    `Ficheiro: ${fname} · ${sheets.length} folha${sheets.length > 1 ? 's' : ''}`;
+
+  cmRefreshSheet();
+  document.getElementById('cmOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function cmRefreshSheet() {
+  const st = CM_STATE; if (!st) return;
+  const sheet = st.sheets[st.currentSheetIdx];
+  const rows = sheet.rows;
+  const defaultHi = sheet.hi !== null ? sheet.hi : 0;
+
+  const hSel = document.getElementById('cmHeaderRow');
+  const maxRow = Math.min(rows.length, 25);
+  let hOpts = '';
+  for (let i = 0; i < maxRow; i++) {
+    const preview = (rows[i] || []).filter(v => v !== null && String(v).trim() !== '')
+      .slice(0, 3).map(v => String(v).trim().substring(0, 25)).join(' | ');
+    hOpts += `<option value="${i}"${i === defaultHi ? ' selected' : ''}>Linha ${i + 1}${preview ? ' — ' + preview : ''}</option>`;
+  }
+  hSel.innerHTML = hOpts;
+  cmRefreshHeader();
+}
+
+function cmRefreshHeader() {
+  const st = CM_STATE; if (!st) return;
+  const sheet = st.sheets[st.currentSheetIdx];
+  const hi = parseInt(document.getElementById('cmHeaderRow').value, 10);
+  const rows = sheet.rows;
+
+  let nCols = 0;
+  for (let i = hi; i < Math.min(rows.length, hi + 15); i++) {
+    if (rows[i] && rows[i].length > nCols) nCols = rows[i].length;
+  }
+  if (nCols < 6) nCols = 6;
+
+  const detected = findCols(rows[hi] || []);
+  if (detected.unit < 0) {
+    for (let ri = hi + 1; ri < Math.min(hi + 15, rows.length); ri++) {
+      for (let ci = 0; ci < (rows[ri] || []).length; ci++) {
+        if (isUnit(rows[ri][ci])) { detected.unit = ci; break; }
+      }
+      if (detected.unit >= 0) break;
+    }
+  }
+  if (detected.unit >= 0) {
+    if (detected.desc < 0)  detected.desc  = detected.unit - 1;
+    if (detected.qty < 0)   detected.qty   = detected.unit + 1;
+    if (detected.price < 0) detected.price = detected.qty + 1;
+    if (detected.total < 0) detected.total = detected.price + 1;
+  }
+  if (detected.ref < 0 && detected.desc > 0) detected.ref = detected.desc - 1;
+
+  const colOpts = ['<option value="-1">— Não usar —</option>'];
+  for (let c = 0; c < nCols; c++) {
+    const hdrVal = String((rows[hi] || [])[c] || '').trim().substring(0, 30);
+    colOpts.push(`<option value="${c}">${_colLetter(c)}${hdrVal ? ' — ' + hdrVal : ''}</option>`);
+  }
+  const colOptsStr = colOpts.join('');
+
+  const fields = [
+    ['cmColRef', detected.ref],
+    ['cmColDesc', detected.desc],
+    ['cmColUnit', detected.unit],
+    ['cmColQty', detected.qty],
+    ['cmColPrice', detected.price],
+    ['cmColTotal', detected.total]
+  ];
+  for (const [id, def] of fields) {
+    const sel = document.getElementById(id);
+    sel.innerHTML = colOptsStr;
+    sel.value = String(def);
+  }
+
+  cmRenderPreview(hi, nCols);
+  cmHighlightCols();
+}
+
+function cmRenderPreview(hi, nCols) {
+  const st = CM_STATE; if (!st) return;
+  const sheet = st.sheets[st.currentSheetIdx];
+  const rows = sheet.rows;
+  const startRow = Math.max(0, hi - 2);
+  const endRow = Math.min(rows.length, hi + 12);
+
+  let html = '<thead><tr><th class="cm-rowidx">#</th>';
+  for (let c = 0; c < nCols; c++) html += `<th data-col="${c}">${_colLetter(c)}</th>`;
+  html += '</tr></thead><tbody>';
+
+  for (let r = startRow; r < endRow; r++) {
+    const isHdr = r === hi;
+    html += `<tr${isHdr ? ' class="cm-header-row"' : ''}><td class="cm-rowidx">${r + 1}</td>`;
+    for (let c = 0; c < nCols; c++) {
+      let v = (rows[r] || [])[c];
+      if (v === null || v === undefined) v = '';
+      v = String(v).substring(0, 80);
+      html += `<td data-col="${c}">${v.replace(/</g, '&lt;')}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  document.getElementById('cmPreview').innerHTML = html;
+}
+
+function cmHighlightCols() {
+  document.querySelectorAll('#cmPreview .cm-col-mapped').forEach(el => el.classList.remove('cm-col-mapped'));
+  const mappedCols = new Set();
+  ['cmColRef', 'cmColDesc', 'cmColUnit', 'cmColQty', 'cmColPrice', 'cmColTotal'].forEach(id => {
+    const v = parseInt(document.getElementById(id).value, 10);
+    if (v >= 0) mappedCols.add(v);
+  });
+  mappedCols.forEach(c => {
+    document.querySelectorAll(`#cmPreview [data-col="${c}"]`).forEach(el => el.classList.add('cm-col-mapped'));
+  });
+  cmValidate();
+}
+
+function cmValidate() {
+  const req = [
+    ['cmColDesc', 'Descrição', 'cmFieldDesc'],
+    ['cmColUnit', 'Unidade', 'cmFieldUnit'],
+    ['cmColQty', 'Quantidade', 'cmFieldQty'],
+    ['cmColPrice', 'P. Unitário', 'cmFieldPrice']
+  ];
+  const missing = [];
+  req.forEach(([id, label, fieldId]) => {
+    const f = document.getElementById(fieldId);
+    const v = parseInt(document.getElementById(id).value, 10);
+    if (v < 0) { missing.push(label); f.classList.add('invalid'); }
+    else { f.classList.remove('invalid'); }
+  });
+
+  const seen = {};
+  let duplicate = null;
+  ['cmColRef', 'cmColDesc', 'cmColUnit', 'cmColQty', 'cmColPrice', 'cmColTotal'].forEach(id => {
+    const v = parseInt(document.getElementById(id).value, 10);
+    if (v < 0) return;
+    if (seen[v]) duplicate = _colLetter(v);
+    seen[v] = id;
+  });
+
+  const warn = document.getElementById('cmWarning');
+  const btn = document.getElementById('cmConfirmBtn');
+  let msg = '';
+  if (missing.length) msg = '⚠ Falta mapear: ' + missing.join(', ');
+  else if (duplicate) msg = `⚠ Coluna ${duplicate} usada em mais do que um campo.`;
+  warn.textContent = msg;
+  btn.disabled = !!msg;
+}
+
+function cmOnSheetChange() {
+  const v = parseInt(document.getElementById('cmSheet').value, 10);
+  CM_STATE.currentSheetIdx = v;
+  cmRefreshSheet();
+}
+
+function cmOnHeaderChange() { cmRefreshHeader(); }
+
+function cmCancel() {
+  document.getElementById('cmOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  const uc = document.getElementById('ucMapa');
+  if (uc) uc.classList.remove('loaded');
+  const fi = document.getElementById('fiMapa');
+  if (fi) fi.value = '';
+  CM_STATE = null;
+}
+
+function cmConfirm() {
+  const st = CM_STATE; if (!st) return;
+  const sheet = st.sheets[st.currentSheetIdx];
+  const hi = parseInt(document.getElementById('cmHeaderRow').value, 10);
+  const cols = {
+    ref:   parseInt(document.getElementById('cmColRef').value, 10),
+    desc:  parseInt(document.getElementById('cmColDesc').value, 10),
+    unit:  parseInt(document.getElementById('cmColUnit').value, 10),
+    qty:   parseInt(document.getElementById('cmColQty').value, 10),
+    price: parseInt(document.getElementById('cmColPrice').value, 10),
+    total: parseInt(document.getElementById('cmColTotal').value, 10)
+  };
+  try {
+    parseMapa(st.wb, st.fname, { sheetName: sheet.name, headerRow: hi, cols });
+  } catch (e) {
+    alert('Erro ao processar: ' + e.message);
+    return;
+  }
+  document.getElementById('cmOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  const cb = st.onConfirm;
+  CM_STATE = null;
+  if (cb) cb();
 }
 
 function loadTabela(e) {
@@ -3107,27 +3444,27 @@ async function sfbOpenSelected() {
       filename:  data.filename
     };
 
-    parseMapa(wb, data.filename);
     closeSPFileBrowser();
+    // Open column-mapping modal; parseMapa runs after user confirms.
+    cmOpen(wb, data.filename, () => {
+      document.getElementById('uploadScreen').style.display = 'none';
+      document.getElementById('editorPage').classList.remove('active');
+      document.getElementById('mainApp').style.display = 'grid';
+      if (!PRICE_DB.length) { PRICE_DB = EMBEDDED_PRICE_DB; buildIDF(); }
+      renderList();
 
-    // Start app
-    document.getElementById('uploadScreen').style.display = 'none';
-    document.getElementById('editorPage').classList.remove('active');
-    document.getElementById('mainApp').style.display = 'grid';
-    if (!PRICE_DB.length) { PRICE_DB = EMBEDDED_PRICE_DB; buildIDF(); }
-    renderList();
-
-    // Show "Guardar no SP" indicator
-    if (document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display = 'block';
-    if (document.getElementById('btnSP')) {
-      document.getElementById('btnSP').style.display = 'block';
-      document.getElementById('btnSP').textContent = '☁ Guardar no SharePoint';
-      document.getElementById('btnSP').style.background = '#0078d4';
-      document.getElementById('btnSP').style.color = '#fff';
-    }
-    checkReady();
-    document.getElementById('ucMapaOk').style.display = 'block';
-    document.getElementById('ucMapaOk').textContent = `✓ ${data.filename} (SharePoint)`;
+      if (document.getElementById('btnPreview')) document.getElementById('btnPreview').style.display = 'block';
+      if (document.getElementById('btnSP')) {
+        document.getElementById('btnSP').style.display = 'block';
+        document.getElementById('btnSP').textContent = '☁ Guardar no SharePoint';
+        document.getElementById('btnSP').style.background = '#0078d4';
+        document.getElementById('btnSP').style.color = '#fff';
+      }
+      checkReady();
+      mapaReady = true;
+      document.getElementById('ucMapaOk').style.display = 'block';
+      document.getElementById('ucMapaOk').textContent = `✓ ${data.filename} (SharePoint)`;
+    });
 
   } catch(e) {
     st.className = 'sp-status err';
