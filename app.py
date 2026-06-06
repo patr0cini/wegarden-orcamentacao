@@ -2,7 +2,6 @@ import base64, io, os, json, secrets, re, unicodedata, time
 from flask import Flask, request, send_file, session, redirect, send_from_directory, jsonify
 import openpyxl
 import urllib.request, urllib.parse
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -12,34 +11,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'wegarden-secret-2026')
 APP_PASSWORD        = os.environ.get('APP_PASSWORD', 'wegarden2026')
 
-# Database — uses SQLite locally, PostgreSQL on Render (set DATABASE_URL env var)
-db_url = os.environ.get('DATABASE_URL', 'sqlite:///orcamentos.db')
-if db_url.startswith('postgres://'):
-    db_url = db_url.replace('postgres://', 'postgresql+psycopg://', 1)
-elif db_url.startswith('postgresql://') and '+' not in db_url.split('://')[0]:
-    db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-class Orcamento(db.Model):
-    id          = db.Column(db.Integer, primary_key=True)
-    nome        = db.Column(db.String(200), nullable=False)
-    criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
-    atualizado  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    dados       = db.Column(db.Text, nullable=False)  # JSON with rows
-    utilizador  = db.Column(db.String(100), default='')
-    meta        = db.Column(db.Text, nullable=True)   # JSON with budget metadata
-
-with app.app_context():
-    db.create_all()
-    # Add meta column if it doesn't exist yet (safe migration for existing DBs)
-    try:
-        with db.engine.connect() as conn:
-            conn.execute(db.text('ALTER TABLE orcamento ADD COLUMN meta TEXT'))
-            conn.commit()
-    except Exception:
-        pass
 AZURE_CLIENT_ID     = os.environ.get('AZURE_CLIENT_ID', '')
 AZURE_CLIENT_SECRET = os.environ.get('AZURE_CLIENT_SECRET', '')
 AZURE_TENANT_ID     = os.environ.get('AZURE_TENANT_ID', '')
@@ -327,72 +298,6 @@ def fill_excel():
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,download_name=filename.rsplit('.',1)[0]+'_preenchido.xlsx')
     except Exception as e: return str(e),500
-
-# ── ORÇAMENTOS DB ────────────────────────────────────────────────
-@app.route('/api/orcamentos', methods=['GET'])
-def list_orcamentos():
-    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
-    ocs = Orcamento.query.order_by(Orcamento.atualizado.desc()).all()
-    def parse_meta(o):
-        try: return json.loads(o.meta) if o.meta else {}
-        except: return {}
-    return jsonify({'orcamentos': [{
-        'id': o.id, 'nome': o.nome,
-        'criado_em': o.criado_em.isoformat(),
-        'atualizado': o.atualizado.isoformat(),
-        'utilizador': o.utilizador,
-        'n_artigos': len([r for r in json.loads(o.dados) if r.get('type') == 'artigo']),
-        'meta': parse_meta(o)
-    } for o in ocs]})
-
-@app.route('/api/orcamentos', methods=['POST'])
-def save_orcamento():
-    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
-    data = request.get_json(force=True)
-    oc_id = data.get('id')
-    meta_val = json.dumps(data.get('meta', {}), ensure_ascii=False) if data.get('meta') is not None else None
-    if oc_id:
-        oc = db.session.get(Orcamento, oc_id)
-        if oc:
-            oc.nome = data.get('nome', oc.nome)
-            oc.dados = json.dumps(data.get('rows', []), ensure_ascii=False)
-            oc.atualizado = datetime.utcnow()
-            oc.utilizador = data.get('utilizador', '')
-            if meta_val is not None:
-                oc.meta = meta_val
-            db.session.commit()
-            return jsonify({'id': oc.id, 'ok': True})
-    oc = Orcamento(
-        nome=data.get('nome', 'Sem nome'),
-        dados=json.dumps(data.get('rows', []), ensure_ascii=False),
-        utilizador=data.get('utilizador', ''),
-        meta=meta_val
-    )
-    db.session.add(oc)
-    db.session.commit()
-    return jsonify({'id': oc.id, 'ok': True})
-
-@app.route('/api/orcamentos/<int:oc_id>', methods=['GET'])
-def get_orcamento(oc_id):
-    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
-    oc = db.session.get(Orcamento, oc_id)
-    if not oc: return jsonify({'error': 'not found'}), 404
-    try: meta = json.loads(oc.meta) if oc.meta else {}
-    except: meta = {}
-    return jsonify({'id': oc.id, 'nome': oc.nome,
-                    'rows': json.loads(oc.dados),
-                    'atualizado': oc.atualizado.isoformat(),
-                    'utilizador': oc.utilizador,
-                    'meta': meta})
-
-@app.route('/api/orcamentos/<int:oc_id>', methods=['DELETE'])
-def delete_orcamento(oc_id):
-    if not authed(): return jsonify({'error': 'not_authenticated'}), 401
-    oc = db.session.get(Orcamento, oc_id)
-    if not oc: return jsonify({'error': 'not found'}), 404
-    db.session.delete(oc)
-    db.session.commit()
-    return jsonify({'ok': True})
 
 # ── SHAREPOINT FILE BROWSER ──────────────────────────────────────
 @app.route('/api/sp-files')
