@@ -605,5 +605,74 @@ def chat():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/fill-excel-sp', methods=['POST', 'OPTIONS'])
+def fill_excel_sp():
+    """Descarrega o Excel original do SharePoint, preenche preços/totais com openpyxl,
+    e grava de volta no mesmo ficheiro (PUT pelo itemId). Usa token delegado enviado pelo browser."""
+    if request.method == 'OPTIONS':
+        resp = jsonify({'ok': True})
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        return resp
+    try:
+        data = request.get_json(force=True)
+        drive_id  = data.get('drive_id', '').strip()
+        item_id   = data.get('item_id', '').strip()
+        sp_token  = data.get('sp_token', '').strip()   # token delegado enviado pelo browser
+        prices    = data.get('prices', [])             # [{sheet, row, priceCol, totalCol, price, total}]
+        if not drive_id or not item_id or not sp_token:
+            return jsonify({'error': 'Faltam drive_id, item_id ou sp_token'}), 400
+
+        # 1) descarregar o ficheiro original do SharePoint
+        dl_url = f'https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/content'
+        req_dl = urllib.request.Request(dl_url, headers={'Authorization': 'Bearer ' + sp_token})
+        with urllib.request.urlopen(req_dl) as r:
+            original_bytes = r.read()
+
+        # 2) preencher com openpyxl (preserva formatação, reconstrói calcChain)
+        wb = openpyxl.load_workbook(io.BytesIO(original_bytes))
+        for it in prices:
+            sheet_name = it.get('sheet')
+            ws = wb[sheet_name] if sheet_name and sheet_name in wb.sheetnames else wb.worksheets[0]
+            row = it.get('row')
+            if not row: continue
+            pc = it.get('priceCol', -1)
+            tc = it.get('totalCol', -1)
+            if pc is not None and pc >= 0:
+                ws.cell(row=row, column=pc + 1).value = it.get('price') or 0
+            if tc is not None and tc >= 0 and it.get('total') is not None:
+                # só escrever se a célula não tiver fórmula
+                cell = ws.cell(row=row, column=tc + 1)
+                if not (hasattr(cell, 'value') and isinstance(cell.value, str) and cell.value.startswith('=')):
+                    cell.value = it.get('total')
+
+        # 3) gravar de volta no mesmo ficheiro (PUT por item_id)
+        out = io.BytesIO()
+        wb.save(out)
+        excel_bytes = out.getvalue()
+
+        ul_url = f'https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/content'
+        req_ul = urllib.request.Request(ul_url, data=excel_bytes, method='PUT')
+        req_ul.add_header('Authorization', 'Bearer ' + sp_token)
+        req_ul.add_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        with urllib.request.urlopen(req_ul) as r:
+            result = json.loads(r.read())
+
+        resp = jsonify({'ok': True, 'name': result.get('name'), 'url': result.get('webUrl')})
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
+
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()[:400]
+        resp = jsonify({'error': f'Graph {e.code}: {body}'})
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp, 500
+    except Exception as e:
+        resp = jsonify({'error': str(e)})
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp, 500
+
+
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)))
