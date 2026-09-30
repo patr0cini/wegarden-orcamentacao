@@ -674,5 +674,56 @@ def fill_excel_sp():
         return resp, 500
 
 
+
+@app.route('/api/logo-sp', methods=['POST', 'OPTIONS'])
+def logo_sp():
+    """Insere o logotipo da We Garden numa celula do Excel do orcamento (SharePoint),
+    preservando toda a formatacao (openpyxl). Recebe drive_id, item_id, sp_token, cell, sheet?."""
+    if request.method == 'OPTIONS':
+        resp = jsonify({'ok': True})
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        resp.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        return resp
+    try:
+        data = request.get_json(force=True)
+        drive_id = data.get('drive_id', '').strip()
+        item_id  = data.get('item_id', '').strip()
+        sp_token = data.get('sp_token', '').strip()
+        cell     = (data.get('cell') or 'A1').strip().upper()
+        sheet    = data.get('sheet')
+        if not drive_id or not item_id or not sp_token:
+            r = jsonify({'error': 'Faltam drive_id, item_id ou sp_token'}); r.headers['Access-Control-Allow-Origin']='*'; return r, 400
+        if not re.match(r'^[A-Z]{1,3}[0-9]{1,7}$', cell):
+            cell = 'A1'
+        dl_url = 'https://graph.microsoft.com/v1.0/drives/%s/items/%s/content' % (drive_id, item_id)
+        req_dl = urllib.request.Request(dl_url, headers={'Authorization': 'Bearer ' + sp_token})
+        with urllib.request.urlopen(req_dl) as rr:
+            original_bytes = rr.read()
+        wb = openpyxl.load_workbook(io.BytesIO(original_bytes))
+        ws = wb[sheet] if (sheet and sheet in wb.sheetnames) else wb.active
+        from openpyxl.drawing.image import Image as XLImage
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logo.png')
+        with open(logo_path, 'rb') as lf:
+            logo_io = io.BytesIO(lf.read())
+        img = XLImage(logo_io)
+        img.width = 190
+        img.height = 51
+        img.anchor = cell
+        ws.add_image(img)
+        out = io.BytesIO(); wb.save(out); excel_bytes = out.getvalue()
+        ul_url = 'https://graph.microsoft.com/v1.0/drives/%s/items/%s/content' % (drive_id, item_id)
+        req_ul = urllib.request.Request(ul_url, data=excel_bytes, method='PUT')
+        req_ul.add_header('Authorization', 'Bearer ' + sp_token)
+        req_ul.add_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        with urllib.request.urlopen(req_ul) as rr:
+            result = json.loads(rr.read())
+        r = jsonify({'ok': True, 'name': result.get('name'), 'cell': cell}); r.headers['Access-Control-Allow-Origin']='*'; return r
+    except urllib.error.HTTPError as e:
+        r = jsonify({'error': 'Graph %s: %s' % (e.code, e.read().decode()[:400])}); r.headers['Access-Control-Allow-Origin']='*'; return r, 500
+    except Exception as e:
+        r = jsonify({'error': str(e)}); r.headers['Access-Control-Allow-Origin']='*'; return r, 500
+
+
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=int(os.environ.get('PORT',5000)))
